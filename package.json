@@ -1,0 +1,27 @@
+{
+  "name": "cocode-client",
+  "version": "0.0.0",
+  "description": "CoTrain WebRTC coding interface",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:lazd/cocode-client.git"
+  },
+  "scripts": {
+    "build": "node_modules/.bin/browserify js/index.js -o bundle.js",
+    "watch": "node_modules/.bin/watchify js/index.js -o bundle.js -v"
+  },
+  "dependencies": {
+    "attachmediastream": "^1.0.1",
+    "codemirror": "^4.2.0",
+    "jquery": "^2.1.1",
+    "mockconsole": "^0.0.1",
+    "socket.io-client": "^0.9.16",
+    "webrtc": "^1.10.0",
+    "webrtcsupport": "^0.7.3",
+    "wildemitter": "^1.0.1"
+  },
+  "devDependencies": {
+    "browserify": "^2.22.0",
+    "watchify": "^0.10.2"
+  }
+}

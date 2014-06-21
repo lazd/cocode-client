@@ -1,0 +1,243 @@
+@import 'icons/style.css';
+@import '../node_modules/codemirror/lib/codemirror.css';
+@import '../node_modules/codemirror/theme/ambiance.css';
+@import 'icons/style.css';
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: sans-serif;
+}
+
+.CodeMirror {
+  position: absolute;
+  top: 64px; /* Below header */
+  bottom: 64px; /* Above footer */
+  left: 0;
+  right: 0;
+
+  height: auto;
+}
+
+.cc-Header,
+.cc-Footer {
+  z-index: 1;
+  position: absolute;
+  height: 64px;
+  left: 0;
+  right: 0;
+
+  background: linear-gradient(to bottom, rgb(230,230,230) 0%, rgb(180,180,180) 100%);
+
+  display: flex;
+  align-items: center;
+}
+
+.cc-Header {
+  top: 0;
+}
+
+.cc-Footer {
+  bottom: 0;
+}
+
+.cc-Header-column {
+  flex: 1;
+  padding: 8px 16px;
+}
+
+.cc-Header-column--center {
+  text-align: center;
+}
+
+.cc-Header-column--right {
+  text-align: right;
+}
+
+.cc-RoomName {
+  display: inline;
+  margin: 0;
+}
+
+.cc-JoinLink {
+  position: relative;
+  font-weight: bold;
+}
+.cc-JoinLink i {
+  padding: 8px;
+  top: 50%;
+  margin-top: -16px; /* vertical align */
+  left: -36px; /* offset to the left */
+  position: absolute;
+}
+
+/* Other's highlighted text */
+.cc-Highlight {
+  background: yellow;
+}
+
+/* Other's cursor */
+.cc-Cursor {
+  position: relative;
+  z-index: 0; /* under real cursor */
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  margin-right: -1px;
+  margin-bottom: -5px;
+  background: yellow;
+}
+
+.cc-JoinLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.cc-JoinLink i {
+  display: none;
+}
+
+.cc-JoinLink:hover i {
+  display: inherit;
+}
+
+.cc-RoomName {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.cc-Logo {
+  height: 32px;
+}
+
+.cc-VideoContainer {
+  position: absolute;
+  z-index: 2; /* Over header / footer */
+
+  background: gray;
+}
+
+.cc-VideoContainer--top {
+  top: 64px; /* Under header */
+  right: 0;
+}
+
+.cc-VideoContainer--bottom {
+  bottom: 0;
+  right: 0;
+}
+
+.cc-Video {
+  position: relative;
+  display: block;
+  height: 128px;
+
+  background: gray;
+}
+
+
+.cc-Video--small {
+  height: 64px;
+}
+
+.cc-Video--canEnlarge {
+  cursor: pointer; /* Show hand on hover */
+
+  cursor: -webkit-zoom-in;
+  cursor: -moz-zoom-in;
+  cursor: zoom-in;
+}
+
+.cc-Video video {
+  display: block;
+  max-height: 100%;
+}
+
+.cc-Video--fullSize video {
+  width: auto;
+  height: auto;
+  max-height: none;
+
+  cursor: -webkit-zoom-out;
+  cursor: -moz-zoom-out;
+  cursor: zoom-out;
+}
+
+.cc-Video-speaking {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+
+  padding: 4px; /* A little offset from sides */
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5); /* Stand out against white backgrounds */
+
+  color: white;
+}
+
+.cc-Input {
+  font-size: 20px;
+}
+
+.cc-ButtonBar {
+  display: inline-block;
+  text-align: center;
+}
+
+.cc-ButtonBar .cc-Button {
+  margin: 0 16px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.cc-Button,
+.cc-Icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  vertical-align: baseline;
+
+  text-decoration: none;
+}
+
+.cc-Button--small,
+.cc-Icon--small {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+.cc-Button--large,
+.cc-Icon--large {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.cc-Button {
+  margin: 0;
+  padding: 0;
+
+  appearance: none;
+  background: transparent;
+  border: none;
+
+  cursor: pointer; /* Show hand on hover */
+}
+
+.cc-Button:focus {
+  outline: none;
+  color: rgb(100, 150, 255);
+  text-shadow: 0 0 4px rgba(100, 150, 255, 0.5);
+}
+
+.u-hidden {
+  display: none;
+}
+
+.cc-Dialog {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  width: 400px;
+  height: 200px;
+}
