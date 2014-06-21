@@ -1,6 +1,6 @@
 @import 'icons/style.css';
-@import '../node_modules/codemirror/lib/codemirror.css';
-@import '../node_modules/codemirror/theme/ambiance.css';
+@import 'codemirror/lib/codemirror.css';
+@import 'codemirror/theme/ambiance.css';
 @import 'icons/style.css';
 
 body {

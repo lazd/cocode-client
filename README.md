@@ -1,22 +1,40 @@
 # CoCode Client
 > CoTrain interview platform
 
-## Usage
-
-Install dependencies and perform a build:
+## Basic Usage
 
 ```
+# Install dependencies
 npm install
-npm run build
+# Perform a build
+grunt build-prod
+# Open the application
+open build/index.html
 ```
 
-Then, open `index.html` to view the client.
+## Production
+
+To perform a production build, run the `prod` npm script:
+
+```
+npm run prod
+```
+
+The `build/` folder will contain the client, ready for deployment.
 
 
 ## Development
 
-Follow the usage instructions above, then use the watch script:
+Install dependencies as usual:
 
 ```
-npm run watch
+npm install
 ```
+
+Run Grunt, which performs a dev build then watches for changes:
+
+```
+grunt
+```
+
+When you pull, be sure to perform another `npm install` in case packages were updates.
