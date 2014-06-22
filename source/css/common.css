@@ -1,6 +1,12 @@
 :root {
+	/* Branding */
+	--coTrainBlue-light: rgb(40, 168, 255);
+	--coTrainBlue-dark: rgb(43, 113, 186);
+
+	/* Inputs */
 	--inputFontSize: 20px;
 	--inputHeight: 32px;
+	--buttonFontColor: white;
 }
 
 %ButtonReset {

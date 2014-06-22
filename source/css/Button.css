@@ -5,9 +5,13 @@
   height: var(--inputHeight);
   padding: 0 8px; /* No vertical padding, height handles that */
 
+  color: var(--buttonFontColor);
+
   font-size: var(--inputFontSize);
+  font-weight: 300;
+  font-family: 'Lato';
 }
 
 .cc-Button--blue {
-  background: rgb(100, 150, 255);
+  background: var(--coTrainBlue-light);
 }
