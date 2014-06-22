@@ -1,0 +1,16 @@
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: sans-serif;
+}
+
+.CodeMirror {
+  position: absolute;
+  top: 64px; /* Below header */
+  bottom: 64px; /* Above footer */
+  left: 0;
+  right: 0;
+
+  height: auto;
+}

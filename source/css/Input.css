@@ -1,0 +1,10 @@
+.cc-Input {
+  box-sizing: border-box;
+  height: var(--inputHeight);
+  margin: 0;
+  padding: 0 4px; /* No vertical padding, height handles that */
+
+  vertical-align: top;
+
+  font-size: var(--inputFontSize);
+}

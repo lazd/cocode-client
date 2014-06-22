@@ -1,0 +1,26 @@
+.cc-IconButton {
+  inherit: .cc-Icon, %ButtonReset;
+
+  margin: 0;
+  padding: 0;
+
+  appearance: none;
+  background: transparent;
+  border: none;
+
+  cursor: pointer; /* Show hand on hover */
+}
+
+.cc-IconButton:focus {
+  outline: none;
+  color: rgb(100, 150, 255);
+  text-shadow: 0 0 4px rgba(100, 150, 255, 0.5);
+}
+
+.cc-IconButton--small {
+  inherit: .cc-Icon--small;
+}
+
+.cc-IconButton--large {
+  inherit: .cc-Icon--large;
+}

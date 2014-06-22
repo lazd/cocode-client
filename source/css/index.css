@@ -1,59 +1,23 @@
-@import 'icons/style.css';
+/* Codemirror */
 @import 'codemirror/lib/codemirror.css';
 @import 'codemirror/theme/ambiance.css';
+
+/* Icons */
 @import 'icons/style.css';
 
-body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: sans-serif;
-}
+/* Support */
+@import 'utilities.css';
+@import 'common.css';
 
-.CodeMirror {
-  position: absolute;
-  top: 64px; /* Below header */
-  bottom: 64px; /* Above footer */
-  left: 0;
-  right: 0;
-
-  height: auto;
-}
-
-.cc-Header,
-.cc-Footer {
-  z-index: 1;
-  position: absolute;
-  height: 64px;
-  left: 0;
-  right: 0;
-
-  background: linear-gradient(to bottom, rgb(230,230,230) 0%, rgb(180,180,180) 100%);
-
-  display: flex;
-  align-items: center;
-}
-
-.cc-Header {
-  top: 0;
-}
-
-.cc-Footer {
-  bottom: 0;
-}
-
-.cc-Header-column {
-  flex: 1;
-  padding: 8px 16px;
-}
-
-.cc-Header-column--center {
-  text-align: center;
-}
-
-.cc-Header-column--right {
-  text-align: right;
-}
+/* Components */
+@import 'layout.css';
+@import 'Icon.css';
+@import 'Input.css';
+@import 'Button.css';
+@import 'IconButton.css';
+@import 'ButtonBar.css';
+@import 'Dialog.css';
+@import 'Header.css';
 
 .cc-RoomName {
   display: inline;
@@ -135,7 +99,6 @@ body {
   background: gray;
 }
 
-
 .cc-Video--small {
   height: 64px;
 }
@@ -172,72 +135,4 @@ body {
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.5); /* Stand out against white backgrounds */
 
   color: white;
-}
-
-.cc-Input {
-  font-size: 20px;
-}
-
-.cc-ButtonBar {
-  display: inline-block;
-  text-align: center;
-}
-
-.cc-ButtonBar .cc-Button {
-  margin: 0 16px;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
-}
-
-.cc-Button,
-.cc-Icon {
-  font-size: 24px;
-  width: 24px;
-  height: 24px;
-  display: inline-block;
-  vertical-align: baseline;
-
-  text-decoration: none;
-}
-
-.cc-Button--small,
-.cc-Icon--small {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
-}
-.cc-Button--large,
-.cc-Icon--large {
-  font-size: 32px;
-  width: 32px;
-  height: 32px;
-}
-
-.cc-Button {
-  margin: 0;
-  padding: 0;
-
-  appearance: none;
-  background: transparent;
-  border: none;
-
-  cursor: pointer; /* Show hand on hover */
-}
-
-.cc-Button:focus {
-  outline: none;
-  color: rgb(100, 150, 255);
-  text-shadow: 0 0 4px rgba(100, 150, 255, 0.5);
-}
-
-.u-hidden {
-  display: none;
-}
-
-.cc-Dialog {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-
-  width: 400px;
-  height: 200px;
 }

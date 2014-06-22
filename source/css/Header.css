@@ -1,0 +1,38 @@
+.cc-Header,
+.cc-Footer {
+  z-index: 1;
+  position: absolute;
+  height: 64px;
+  left: 0;
+  right: 0;
+
+  background: linear-gradient(to bottom, rgb(230,230,230) 0%, rgb(180,180,180) 100%);
+
+  display: flex;
+  align-items: center;
+}
+
+.cc-Header {
+  top: 0;
+}
+
+.cc-Footer {
+  bottom: 0;
+}
+
+.cc-Header-column {
+  flex: 1;
+  padding: 8px 16px;
+}
+
+.cc-Header-column--center {
+  text-align: center;
+}
+
+.cc-Header-column--wide {
+  flex: 2;
+}
+
+.cc-Header-column--right {
+  text-align: right;
+}

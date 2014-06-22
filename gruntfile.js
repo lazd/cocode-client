@@ -12,7 +12,9 @@ module.exports = function(grunt) {
         'source/css/',
         'node_modules/'
       ]
-    })
+    }),
+    require('rework-inherit')(),
+    require('rework-vars')()
   ];
 
   var reworkFiles = {
@@ -22,6 +24,11 @@ module.exports = function(grunt) {
   var browserifyFiles = {
     'build/index.js': 'source/js/index.js'
   };
+
+  var resourcesFiles = [
+    'index.html',
+    'images/*'
+  ];
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -80,7 +87,7 @@ module.exports = function(grunt) {
     copy: {
       resources: {
         cwd: 'source/',
-        src: ['index.html', 'images/*'],
+        src: resourcesFiles,
         dest: 'build/',
         expand: true
       },
@@ -97,7 +104,8 @@ module.exports = function(grunt) {
     },
     watch: {
       resources: {
-        files: ['<%= copy.resources.src %>'],
+        // Use the same resrouces as the copy task, but tack the directory on there
+        files: resourcesFiles.map(function(fileName) { return 'source/'+fileName; }),
         tasks: ['copy:resources']
       },
       icons: {

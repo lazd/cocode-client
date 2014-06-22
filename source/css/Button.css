@@ -1,0 +1,13 @@
+.cc-Button {
+  inherit: %ButtonReset;
+
+  box-sizing: border-box;
+  height: var(--inputHeight);
+  padding: 0 8px; /* No vertical padding, height handles that */
+
+  font-size: var(--inputFontSize);
+}
+
+.cc-Button--blue {
+  background: rgb(100, 150, 255);
+}
