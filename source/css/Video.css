@@ -34,6 +34,8 @@
   bottom: var(--headerHeight);
   left: 0;
   right: 0;
+
+  text-align: center !important;
 }
 
 .cc-Video--fullSize video {
@@ -41,9 +43,9 @@
   -moz-transform: none !important;
   transform: none !important;
 
-  width: auto;
-  height: auto;
-  max-height: none;
+  width: auto !important;
+  height: 100% !important;
+  max-height: none !important;
 
   cursor: -webkit-zoom-out;
   cursor: -moz-zoom-out;

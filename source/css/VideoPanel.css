@@ -52,7 +52,7 @@
   pointer-events: all;
 }
 
-/* Two video panel */
+/* One video panel */
 .cc-VideoPanel--1 .cc-Video video {
   width: 640px;
   height: 480px;
@@ -64,6 +64,7 @@
   height: 175px;
 }
 
+/* Two video panel */
 .cc-VideoPanel--2 .cc-Video:nth-child(1) > * {
   -webkit-transform: perspective(var(--videoPanel-2-perspective)) rotate3d(0, 1, 0, var(--videoPanel-2-rotation)) skew(0, calc(-1 * var(--videoPanel-2-skew)));
   -moz-transform: rotate3d(0, 1, 0, var(--videoPanel-2-rotation)) skew(0, calc(-1 * var(--videoPanel-2-skew)));
@@ -71,6 +72,10 @@
 }
 .cc-VideoPanel--2 .cc-Video:nth-child(1) {
   text-align: right;
+}
+.cc-VideoPanel--2 .cc-Video:nth-child(1) > .cc-Video-speaking {
+  bottom: 4%;
+  right: 2%;
 }
 
 .cc-VideoPanel--2 .cc-Video:nth-child(2) > * {
