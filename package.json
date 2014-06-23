@@ -29,6 +29,7 @@
     "grunt-contrib-watch": "^0.6.1",
     "grunt-rework": "git+ssh://git@github.com:lazd/grunt-rework.git",
     "rework": "^1.0.0",
+    "rework-calc": "^0.2.2",
     "rework-import": "^1.0.0",
     "rework-inherit": "^0.2.2",
     "rework-vars": "^3.1.1"

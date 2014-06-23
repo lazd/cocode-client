@@ -14,7 +14,8 @@ module.exports = function(grunt) {
       ]
     }),
     require('rework-inherit')(),
-    require('rework-vars')()
+    require('rework-vars')(),
+    require('rework-calc')
   ];
 
   var reworkFiles = {
@@ -50,6 +51,9 @@ module.exports = function(grunt) {
         files: browserifyFiles
       },
       watch: {
+        bundleOptions: {
+          debug: true
+        },
         options: {
           watch: true
         },
