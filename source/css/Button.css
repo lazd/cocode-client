@@ -12,6 +12,11 @@
   font-family: 'Lato';
 }
 
+.cc-Button:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+
 .cc-Button--blue {
   background: var(--coTrainBlue-light);
 }
