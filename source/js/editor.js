@@ -54,7 +54,7 @@ module.exports = function(simplewebrtc, track) {
 
         track('editor.refreshed', {
           user: peer.user,
-          payload: payload
+          body: payload
         });
       }
       else if (data.type === 'change') {
@@ -70,7 +70,7 @@ module.exports = function(simplewebrtc, track) {
 
         track('editor.selection', {
           user: peer.user,
-          payload: payload
+          selections: payload
         });
       }
     }
@@ -90,7 +90,7 @@ module.exports = function(simplewebrtc, track) {
       webrtc.sendDirectlyToAll('simplewebrtc', 'change', op);
 
       track('editor.changed', {
-        user: webrtc.ourUser,
+        user: simplewebrtc.ourUser,
         change: op
       });
     }
@@ -102,8 +102,8 @@ module.exports = function(simplewebrtc, track) {
     webrtc.sendDirectlyToAll('simplewebrtc', 'selection', selections);
 
     track('editor.selection', {
-      user: webrtc.ourUser,
-      payload: selections
+      user: simplewebrtc.ourUser,
+      selections: selections
     });
   });
 

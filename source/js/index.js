@@ -42,10 +42,19 @@ function init() {
   var currentQuestion = null;
   var currentQuestionIndex = 0;
 
+  var isInterviewer = false;
+
   // Grab the room and user from the URL
   var parts = location.hash.slice(1).split('@');
   if (parts[1]) {
-    ourUser = parts[0];
+    var userParts = parts[0].split(':');
+
+    // Only enable recorders with a special URL
+    if (userParts.length === 2 && userParts[1] === 'interviewer') {
+      isInterviewer = true;
+    }
+    ourUser = userParts[0];
+
     room = parts[1];
   }
   else {
@@ -53,13 +62,16 @@ function init() {
     room = parts[0];
   }
 
+
   var els = {
     videoPanel: '#cc-VideoPanel',
     local: '#cc-LocalVideo',
     languageSelect: '#cc-Language',
     editor: '#cc-EditorComponent',
     runCodeButton: '.js-runCode',
-    downloadButton: '#cc-DownloadButton'
+    downloadButton: '#cc-DownloadButton',
+    footer: '#cc-Footer',
+    footerButtons: '.js-footerButtons'
   };
 
   // Create our webrtc connection
@@ -111,6 +123,11 @@ function init() {
   });
 
   function recordPeer(peer) {
+    // Don't have clients record
+    if (!isInterviewer) {
+      return;
+    }
+
     if (isFirefox) {
       peer.videoRecorder = RecordRTC(peer.stream, recorderOptions);
       peer.videoRecorder.startRecording();
@@ -227,7 +244,9 @@ function init() {
   function downloadSession(event) {
     var session = {
       log: log,
-      questions: questions
+      questions: questions,
+      name: room,
+      duration: getTime()
     };
 
     var data = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(session));
@@ -247,32 +266,34 @@ function init() {
 
     setVideoCount(0);
 
-    if (isFirefox) {
-      videoRecorder = RecordRTC(stream, recorderOptions);
-      videoRecorder.startRecording();
-      videoRecorder.startTime = Date.now();
-      track('video.started', {
-        user: ourUser
-      });
-    }
-    else {
-      // Separate streams for Chrome
-      audioRecorder = RecordRTC(stream, {
-        onAudioProcessStarted: function( ) {
-          videoRecorder.startRecording();
-          track('video.started', {
-            user: ourUser
-          });
-        }
-      });
+    if (isInterviewer) {
+      if (isFirefox) {
+        videoRecorder = RecordRTC(stream, recorderOptions);
+        videoRecorder.startRecording();
+        videoRecorder.startTime = Date.now();
+        track('video.started', {
+          user: ourUser
+        });
+      }
+      else {
+        // Separate streams for Chrome
+        audioRecorder = RecordRTC(stream, {
+          onAudioProcessStarted: function( ) {
+            videoRecorder.startRecording();
+            track('video.started', {
+              user: ourUser
+            });
+          }
+        });
 
-      videoRecorder = RecordRTC(stream, recorderOptions);
+        videoRecorder = RecordRTC(stream, recorderOptions);
 
-      audioRecorder.startRecording();
-      audioRecorder.startTime = videoRecorder.startTime = Date.now();
-      track('audio.started', {
-        user: ourUser
-      });
+        audioRecorder.startRecording();
+        audioRecorder.startTime = videoRecorder.startTime = Date.now();
+        track('audio.started', {
+          user: ourUser
+        });
+      }
     }
   });
 
@@ -398,7 +419,7 @@ function init() {
       else if (data.type === 'changeLanguage') {
         var language = data.payload;
 
-        setLanguage(language, user);
+        setLanguage(language, peer.user);
       }
       else if (data.type === 'changeQuestion') {
         // Use questions from peer
@@ -409,7 +430,7 @@ function init() {
 
         track('showQuestion', {
           user: peer.user,
-          question: data.payload.questionIndex
+          question: currentQuestion
         });
       }
     }
@@ -454,7 +475,7 @@ function init() {
   $('#cc-Language').on('change', function(event) {
     var language = event.currentTarget.value;
 
-    setLanguage(language, ourUser )
+    setLanguage(language, ourUser);
   });
 
   // Save code changes to the question so it shows when revisited
@@ -683,6 +704,8 @@ function init() {
   }
 
   function showQuestion(questionIndex, noTrigger) {
+    els.$footerButtons[isInterviewer ? 'show' : 'hide']();
+
     if (questions[questionIndex]) {
       currentQuestionIndex = questionIndex;
       currentQuestion = questions[questionIndex];
