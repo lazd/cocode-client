@@ -19,8 +19,16 @@ function SimpleWebRTC(opts) {
             adjustPeerVolume: true,
             peerVolumeWhenSpeaking: 0.25,
             media: {
-                video: true,
-                audio: true
+                // video: true,
+                audio: true,
+                video: {
+                    "mandatory": {
+                        "minWidth": "320",
+                        "minHeight": "240",
+                        "maxWidth": "320",
+                        "maxHeight": "240"
+                    }
+                }
             }
         };
     var item, connection;
@@ -326,11 +334,14 @@ SimpleWebRTC.prototype.joinRoom = function (name, cb) {
     });
 };
 
-SimpleWebRTC.prototype.getEl = function (idOrEl) {
-    if (typeof idOrEl === 'string') {
-        return document.getElementById(idOrEl);
+SimpleWebRTC.prototype.getEl = function (selectorOrEl) {
+    if (typeof selectorOrEl === 'string') {
+        if (selectorOrEl == '') {
+            return null;
+        }
+        return document.querySelector(selectorOrEl);
     } else {
-        return idOrEl;
+        return selectorOrEl;
     }
 };
 
@@ -340,7 +351,8 @@ SimpleWebRTC.prototype.startLocalVideo = function () {
         if (err) {
             self.emit('localMediaError', err);
         } else {
-            attachMediaStream(stream, self.getLocalVideoContainer(), {muted: true, mirror: true});
+            // We'll mirror in CSS ourselves
+            attachMediaStream(stream, self.getLocalVideoContainer(), {muted: true, mirror: false});
         }
     });
 };
