@@ -2,7 +2,7 @@
 .cc-Footer {
   z-index: 1;
   position: absolute;
-  height: 64px;
+  height: var(--headerHeight);
   left: 0;
   right: 0;
 

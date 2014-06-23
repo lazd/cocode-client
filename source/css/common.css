@@ -7,6 +7,9 @@
 	--inputFontSize: 20px;
 	--inputHeight: 32px;
 	--buttonFontColor: white;
+
+	/* Layout */
+	--headerHeight: 64px;
 }
 
 %ButtonReset {
