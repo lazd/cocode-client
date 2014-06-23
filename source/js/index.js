@@ -56,7 +56,7 @@ function init() {
     if (channel.label === 'simplewebrtc') {
       if (currentQuestionIndex !== 0) {
         // Send current question to peer if we're not on the first one
-        broadcastQuestion();
+        broadcastQuestions();
       }
     }
   });
@@ -129,6 +129,10 @@ function init() {
         hideSpeaking(document.getElementById('volume_' + peer.id));
       }
       else if (data.type === 'changeQuestion') {
+        // Use questions from peer
+        questions = data.payload.questions;
+
+        // Show same question as peer
         showQuestion(data.payload.questionIndex, true);
       }
     }
@@ -148,6 +152,11 @@ function init() {
 
   $(document.body).on('click', '.js-saveBookmark', function() {
     console.log('Would save bookmark');
+  });
+
+  // Save code changes to the question so it shows when revisited
+  editor.on('change', function() {
+    currentQuestion.code = editor.getValue();
   });
 
   // Handle create room form
@@ -215,8 +224,8 @@ function init() {
     els.$editor.hide();
   }
 
-  function broadcastQuestion() {
-    webrtc.sendDirectlyToAll('simplewebrtc', 'changeQuestion', { questionIndex: currentQuestionIndex });
+  function broadcastQuestions() {
+    webrtc.sendDirectlyToAll('simplewebrtc', 'changeQuestion', { questions: questions, questionIndex: currentQuestionIndex });
   }
 
   function showQuestion(questionIndex, noTrigger) {
@@ -250,7 +259,7 @@ function init() {
       $('.js-nextQuestion').attr('disabled', questionIndex === questions.length - 1);
 
       if (!noTrigger) {
-        broadcastQuestion();
+        broadcastQuestions();
       }
     }
   }
