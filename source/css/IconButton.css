@@ -9,6 +9,8 @@
   border: none;
 
   cursor: pointer; /* Show hand on hover */
+
+  color: var(--iconButtonFontColor);
 }
 
 .cc-IconButton:focus {
