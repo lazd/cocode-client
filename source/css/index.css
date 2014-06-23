@@ -19,6 +19,7 @@
 @import 'Dialog.css';
 @import 'Header.css';
 @import 'Interview.css';
+@import 'Video.css';
 @import 'VideoPanel.css';
 
 .cc-JoinLink {
@@ -71,58 +72,3 @@
   height: 32px;
 }
 
-.cc-VideoContainer {
-  position: absolute;
-  z-index: 2; /* Over header / footer */
-
-  background: gray;
-}
-
-.cc-VideoContainer--top {
-  top: 64px; /* Under header */
-  right: 0;
-}
-
-.cc-VideoContainer--bottom {
-  bottom: 0;
-  right: 0;
-}
-
-.cc-Video {
-  position: relative;
-  display: block;
-}
-
-.cc-Video--canEnlarge {
-  cursor: pointer; /* Show hand on hover */
-
-  cursor: -webkit-zoom-in;
-  cursor: -moz-zoom-in;
-  cursor: zoom-in;
-}
-
-.cc-Video video {
-  display: inline-block;
-  max-height: 100%;
-}
-
-.cc-Video--fullSize video {
-  width: auto;
-  height: auto;
-  max-height: none;
-
-  cursor: -webkit-zoom-out;
-  cursor: -moz-zoom-out;
-  cursor: zoom-out;
-}
-
-.cc-Video-speaking {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-
-  padding: 4px; /* A little offset from sides */
-  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5); /* Stand out against white backgrounds */
-
-  color: white;
-}
