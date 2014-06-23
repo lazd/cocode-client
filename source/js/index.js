@@ -381,8 +381,8 @@ function init() {
       }
       else if (data.type === 'hello') {
         if (!peer.user) {
-          console.warn('Got username for '+peer.id+': '+peer.user);
           peer.user = data.payload.user;
+          console.warn('Got username for '+peer.id+': '+peer.user);
 
           track('collaborator.joined', { user: peer.user });
           recordPeer(peer);
