@@ -55,6 +55,21 @@ function search(arr, val) {\n\
   {
     name: 'Implement JSON.stringify()',
     video: true,
+    test: function() {
+      var obj = {
+        name: 'Value',
+        quote: '"Ain\'t nothin but a G thang"',
+        sayHi: function() { alert('Hi!'); },
+        clue: null,
+        meaning: undefined,
+        'new-items': [
+          'First',
+          'Second'
+        ]
+      };
+      var output = stringify(obj);
+      console.assert(output === JSON.stringify(obj), 'Output should match JSON.stringify\'s output');
+    },
     code: '/**\n\
   JSON.stringify()\n\
 \n\
@@ -66,23 +81,19 @@ function search(arr, val) {\n\
 function stringify(obj) {\n\
   \n\
 }\n\
-\n\
-stringify({\n\
-  name: \'Value\',\n\
-  quote: \'"Ain\'t nothin but a G thang",\n\
-  sayHi: function() { alert(\'Hi!\'); },\n\
-  clue: null,\n\
-  meaning: undefined,\n\
-  \'new-items\': [\n\
-    \'First\',\n\
-    \'Second\'\n\
-  ]\n\
-});\n\
 '
   },
   {
     name: 'Reverse an array in place',
     video: true,
+    test: function() {
+      var actual = reverse([15, 10, 5, 1, 2, 3]);
+      var expected = [3, 2, 1, 5, 10, 15];
+      console.assert(actual.length === expected.length, 'Should have the correct number of items', 'Expected '+expected.length+'\nGot '+actual.length);
+      actual.forEach(function(number, index) {
+        console.assert(number === expected[index], 'Should match index at '+index, 'Expected '+expected[index]+'\nGot '+number);
+      });
+    },
     code: '/**\n\
   Search in a sorted array\n\
 \n\
@@ -92,8 +103,6 @@ stringify({\n\
 function reverse(arr) {\n\
 \n\
 }\n\
-\n\
-reverse([15, 10, 5, 1, 2, 3]);\n\
 '
   },
   {
