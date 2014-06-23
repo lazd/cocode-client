@@ -25,12 +25,16 @@
   padding: 8px 16px;
 }
 
-.cc-Header-column--center {
-  text-align: center;
-}
-
 .cc-Header-column--wide {
   flex: 3;
+}
+
+.cc-Header-column--left {
+  text-align: left;
+}
+
+.cc-Header-column--center {
+  text-align: center;
 }
 
 .cc-Header-column--right {
