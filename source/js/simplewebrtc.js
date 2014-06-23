@@ -352,7 +352,9 @@ SimpleWebRTC.prototype.startLocalVideo = function () {
             self.emit('localMediaError', err);
         } else {
             // We'll mirror in CSS ourselves
-            attachMediaStream(stream, self.getLocalVideoContainer(), {muted: true, mirror: false});
+            var video = self.getLocalVideoContainer();
+            attachMediaStream(stream, video, {muted: true, mirror: false});
+            self.emit('localMediaStarted', video, stream);
         }
     });
 };

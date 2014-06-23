@@ -3,12 +3,35 @@ var SimpleWebRTC = require('./SimpleWebRTC');
 var Editor = require('./editor');
 var questions = require('./questions');
 
+var recorderOptions = {
+   type: 'video',
+   video: {
+      width: 320,
+      height: 240
+   },
+   canvas: {
+      width: 320,
+      height: 240
+   }
+};
+
+// Browser detection, uhg
+var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+
 function init() {
   // Current number of videos displayed, including our own
   var videoCount = 1;
 
-  // A log of evenst
+  // A log of events
   var log = [];
+
+  // A list of recorders
+  var audioURLs = [];
+  var videoURLs = [];
+
+  // Recorders for ourself
+  var videoRecorder = null;
+  var audioRecorder = null;
 
   var currentQuestion = null;
   var currentQuestionIndex = 0;
@@ -74,6 +97,102 @@ function init() {
     console.error('Error on %s: %s', label, error);
   });
 
+  function downloadVideos() {
+    // Iterate over each peer
+    webrtc.webrtc.peers.forEach(function(peer) {
+      // Download their audio and video
+      if (peer.audioRecorder) {
+        peer.audioRecorder.stopRecording(function(url) {
+          downloadAudio(url, peer.id);
+        });
+
+      }
+      if (peer.videoRecorder) {
+        peer.videoRecorder.stopRecording(function(url) {
+          downloadVideo(url, peer.id);
+        });
+      }
+    });
+
+    // Download previously stopped audio streams
+    for (var peerId in audioURLs) {
+      downloadAudio(audioURLs[peerId], peerId);
+    }
+
+    // Download previously stopped video streams
+    for (var peerId in videoURLs) {
+      downloadVideo(videoURLs[peerId], peerId);
+    }
+
+    // Download our audio and video
+    if (audioRecorder) {
+      audioRecorder.stopRecording(function(url) {
+        downloadAudio(url, 'self');
+      });
+
+    }
+    if (videoRecorder) {
+      videoRecorder.stopRecording(function(url) {
+        downloadVideo(url, 'self');
+      });
+    }
+  };
+
+  function sanitizeID(id) {
+    return id.replace(/[^a-zA-Z0-9]+/g, '');
+  }
+
+  function downloadVideo(url, id) {
+    id = sanitizeID(id);
+    downloadURL(url, (id || room)+'.video.mp4');
+  }
+
+  function downloadAudio(url, id) {
+    id = sanitizeID(id);
+    downloadURL(url, (id || room)+'.audio.wav');
+  }
+
+  function downloadURL(url, fileName) {
+    // Check for anchor with download ability
+    var downloadAttrSupported = !isFirefox && ('download' in document.createElement('a'));
+
+    if (downloadAttrSupported) {
+      var a = document.createElement('a');
+      a.download = fileName;
+      a.href = url;
+      a.target = '_blank';
+      a.click();
+    }
+    else {
+      // Open the image in a popup
+      window.open(url, fileName);
+    }
+  };
+
+  /*
+    Collaborator has joined
+  */
+  webrtc.on('localMediaStarted', function(video, stream) {
+    console.log('Local video started!');
+
+    if (isFirefox) {
+      videoRecorder = RecordRTC(stream, recorderOptions);
+      videoRecorder.startRecording();
+    }
+    else {
+      // Separate streams for Chrome
+      audioRecorder = RecordRTC(stream, {
+        onAudioProcessStarted: function( ) {
+          videoRecorder.startRecording();
+        }
+      });
+
+      videoRecorder = RecordRTC(stream, recorderOptions);
+
+      audioRecorder.startRecording();
+    }
+  });
+
   /*
     Collaborator has joined
   */
@@ -81,6 +200,23 @@ function init() {
     console.log('Collaborator joined!');
 
     track('collaborator.joined', { name: peer.id });
+
+    if (isFirefox) {
+      peer.videoRecorder = RecordRTC(peer.stream, recorderOptions);
+      peer.videoRecorder.startRecording();
+    }
+    else {
+      // Separate streams for Chrome
+      peer.audioRecorder = RecordRTC(peer.stream, {
+        onAudioProcessStarted: function( ) {
+          peer.videoRecorder.startRecording();
+        }
+      });
+
+      peer.videoRecorder = RecordRTC(peer.stream, recorderOptions);
+
+      peer.audioRecorder.startRecording();
+    }
 
     // Update video count
     setVideoCount(+1);
@@ -105,7 +241,16 @@ function init() {
       d.appendChild(vol);
       els.videoPanel.appendChild(d);
     }
+
   });
+
+  function storeAudioTrack(url, peer) {
+    audioURLs[peer.id] = url;
+  }
+
+  function storeVideoTrack(url, peer) {
+    videoURLs[peer.id] = url;
+  }
 
   /*
     Collaborator has left
@@ -114,6 +259,17 @@ function init() {
     console.log('Collaborator left!');
 
     track('collaborator.left', { name: peer.id });
+
+    if (peer.audioRecorder) {
+      peer.audioRecorder.stopRecording(function(url) {
+        storeAudioTrack(url, peer);
+      });
+    }
+    if (peer.videoRecorder) {
+      peer.videoRecorder.stopRecording(function(url) {
+        storeVideoTrack(url, peer);
+      });
+    }
 
     // Update video count
     setVideoCount(-1);
@@ -178,7 +334,8 @@ function init() {
   });
 
   $(document.body).on('click', '.js-downloadSession', function(event) {
-    downloadSession(event);
+    event.preventDefault();
+    downloadSession();
   });
 
   $(document.body).on('click', '.js-runCode', function(event) {
@@ -409,22 +566,11 @@ function init() {
 
     var data = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(session));
 
-    // Check for anchor with download ability
-    var downloadAttrSupported = ('download' in document.createElement('a'));
+    // Download the session JSON
+    downloadURL('data:'+data, room+'.session.json');
 
-    if (downloadAttrSupported) {
-      // Create an anchor to download it, click it
-      // This only works in Chrome and FF 20+
-      els.downloadButton.setAttribute('href', 'data:'+data);
-      els.downloadButton.setAttribute('download', room+'.json');
-    }
-    else {
-      // Open the image in a popup
-      window.open(url, data);
-      if (event) {
-        event.preventDefault();
-      }
-    }
+    // Download the recordings
+    downloadVideos();
   }
 
   function showQuestion(questionIndex, noTrigger) {
