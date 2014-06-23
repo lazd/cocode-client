@@ -175,6 +175,8 @@ function init() {
   webrtc.on('localMediaStarted', function(video, stream) {
     console.log('Local video started!');
 
+    setVideoCount(0);
+
     if (isFirefox) {
       videoRecorder = RecordRTC(stream, recorderOptions);
       videoRecorder.startRecording();

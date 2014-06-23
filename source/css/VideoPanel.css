@@ -50,12 +50,17 @@
   box-reflect: below 0px -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(90%, transparent), to(rgba(0,0,0,0.35)));
 }
 
+/* Two video panel */
+.cc-VideoPanel--1 .cc-Video video {
+  width: 640px;
+  height: 480px;
+}
+
+.cc-VideoPanel--1.cc-VideoPanel--small .cc-Video video,
 .cc-VideoPanel--small .cc-Video video {
   width: auto;
   height: 175px;
 }
-
-/* Two video panel */
 
 .cc-VideoPanel--2 .cc-Video:nth-child(1) > * {
   -webkit-transform: perspective(var(--videoPanel-2-perspective)) rotate3d(0, 1, 0, var(--videoPanel-2-rotation)) skew(0, calc(-1 * var(--videoPanel-2-skew)));
