@@ -216,7 +216,7 @@ function init() {
 
   function downloadVideo(url, name) {
     id = sanitizeFilename(name);
-    downloadURL(url, name+'.video.mp4');
+    downloadURL(url, name+'.video.webm');
   }
 
   function downloadAudio(url, name) {
@@ -308,6 +308,22 @@ function init() {
 
   });
 
+  function setLanguage(language, user) {
+    // Update dropdown
+    $('#cc-Language').val(language);
+
+    // Switch editor the laguage
+    editor.setOption('mode', language);
+
+    // Store language on the question
+    currentQuestion.language = language;
+
+    track('editor.languageChange', {
+      user: user,
+      language: language
+    });
+  }
+
   function storeAudioTrack(url, peer) {
     audioURLs[peer.user || peer.id] = url;
   }
@@ -379,6 +395,11 @@ function init() {
           broadcastName(peer);
         }
       }
+      else if (data.type === 'changeLanguage') {
+        var language = data.payload;
+
+        setLanguage(language, user);
+      }
       else if (data.type === 'changeQuestion') {
         // Use questions from peer
         questions = data.payload.questions;
@@ -427,6 +448,13 @@ function init() {
 
   $(document.body).on('click', '.js-runCode', function(event) {
     runCode();
+  });
+
+  // Handle language changes
+  $('#cc-Language').on('change', function(event) {
+    var language = event.currentTarget.value;
+
+    setLanguage(language, ourUser )
   });
 
   // Save code changes to the question so it shows when revisited
@@ -644,7 +672,7 @@ function init() {
 
     log.push(obj);
 
-    console.log('%s: %s', eventName, JSON.stringify(obj));
+    // console.log('%s: %s', eventName, JSON.stringify(obj));
   }
 
   function trackSelfShowQuestion() {

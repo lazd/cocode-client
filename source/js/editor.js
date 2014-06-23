@@ -21,15 +21,6 @@ module.exports = function(simplewebrtc, track) {
     viewportMargin: Infinity
   });
 
-  // Handle language changes
-  $('#cc-Language').on('change', function(event) {
-    var language = event.currentTarget.value;
-
-    editor.setOption('mode', language);
-
-    webrtc.sendDirectlyToAll('simplewebrtc', 'changeLanguage', language);
-  });
-
   function broadcastEditorContents() {
     var editorContents = editor.getValue();
     var language = $('#cc-Language').val();
@@ -72,15 +63,6 @@ module.exports = function(simplewebrtc, track) {
         track('editor.changed', {
           user: peer.user,
           change: payload
-        });
-      }
-      else if (data.type === 'changeLanguage') {
-        $('#cc-Language').val(payload);
-        editor.setOption('mode', payload);
-
-        track('editor.languageChange', {
-          user: peer.user,
-          language: payload
         });
       }
       else if (data.type === 'selection') {
