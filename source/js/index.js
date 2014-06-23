@@ -19,11 +19,17 @@ var recorderOptions = {
 var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 
 function init() {
+  // Initial start time
+  var startTime = Date.now();
+
   // Current number of videos displayed, including our own
   var videoCount = 1;
 
   // A log of events
   var log = [];
+
+  // The name of the user
+  var ourUser = 'unnamed';
 
   // A list of recorders
   var audioURLs = [];
@@ -36,8 +42,16 @@ function init() {
   var currentQuestion = null;
   var currentQuestionIndex = 0;
 
-  // Grab the room from the URL
-  var room = location.hash.slice(1);
+  // Grab the room and user from the URL
+  var parts = location.hash.slice(1).split('@');
+  if (parts[1]) {
+    ourUser = parts[0];
+    room = parts[1];
+  }
+  else {
+    // Keep default user
+    room = parts[0];
+  }
 
   var els = {
     videoPanel: '#cc-VideoPanel',
@@ -57,6 +71,8 @@ function init() {
     detectSpeakingEvents: true,
     autoAdjustMic: false
   });
+
+  webrtc.ourUser = ourUser;
 
   // Create the editor
   var editor = Editor(webrtc, track);
@@ -82,10 +98,7 @@ function init() {
     console.log('%s opened!', channel.label);
 
     if (channel.label === 'simplewebrtc') {
-      if (currentQuestionIndex !== 0) {
-        // Send current question to peer if we're not on the first one
-        broadcastQuestions();
-      }
+      broadcastName();
     }
   });
 
@@ -97,59 +110,91 @@ function init() {
     console.error('Error on %s: %s', label, error);
   });
 
-  function downloadVideos() {
+  function recordPeer(peer) {
+    if (isFirefox) {
+      peer.videoRecorder = RecordRTC(peer.stream, recorderOptions);
+      peer.videoRecorder.startRecording();
+      peer.videoRecorder.startTime = Date.now();
+
+      track('video.started', {
+        user: peer.user
+      });
+    }
+    else {
+      // Separate streams for Chrome
+      peer.audioRecorder = RecordRTC(peer.stream, {
+        onAudioProcessStarted: function() {
+          peer.videoRecorder.startRecording();
+          track('video.started', {
+            user: peer.user
+          });
+        }
+      });
+
+      peer.videoRecorder = RecordRTC(peer.stream, recorderOptions);
+
+      peer.audioRecorder.startRecording();
+      track('audio.started', {
+        user: peer.user
+      });
+      peer.audioRecorder.startTime = peer.videoRecorder.startTime = Date.now();
+    }
+  }
+
+  function downloadRecordings() {
     // Iterate over each peer
     webrtc.webrtc.peers.forEach(function(peer) {
       // Download their audio and video
       if (peer.audioRecorder) {
-        peer.audioRecorder.stopRecording(function(url) {
-          downloadAudio(url, peer.id);
+        track('audio.stopped', {
+          user: peer.user
         });
-
+        peer.audioRecorder.stopRecording(function(url) {
+          downloadAudio(url, peer.user || peer.id);
+        });
       }
       if (peer.videoRecorder) {
+        track('video.stopped', {
+          user: peer.user
+        });
         peer.videoRecorder.stopRecording(function(url) {
-          downloadVideo(url, peer.id);
+          downloadVideo(url, peer.user || peer.id);
         });
       }
     });
 
     // Download previously stopped audio streams
-    for (var peerId in audioURLs) {
-      downloadAudio(audioURLs[peerId], peerId);
+    for (var peerLabel in audioURLs) {
+      downloadAudio(audioURLs[peerLabel], peerLabel);
     }
 
     // Download previously stopped video streams
-    for (var peerId in videoURLs) {
-      downloadVideo(videoURLs[peerId], peerId);
+    for (var peerLabel in videoURLs) {
+      downloadVideo(videoURLs[peerLabel], peerLabel);
     }
 
     // Download our audio and video
     if (audioRecorder) {
+      track('audio.stopped', {
+        user: ourUser
+      });
       audioRecorder.stopRecording(function(url) {
-        downloadAudio(url, 'self');
+        downloadAudio(url, ourUser);
       });
 
     }
     if (videoRecorder) {
+      track('video.stopped', {
+        user: ourUser
+      });
       videoRecorder.stopRecording(function(url) {
-        downloadVideo(url, 'self');
+        downloadVideo(url, ourUser);
       });
     }
   };
 
-  function sanitizeID(id) {
+  function sanitizeFilename(id) {
     return id.replace(/[^a-zA-Z0-9]+/g, '');
-  }
-
-  function downloadVideo(url, id) {
-    id = sanitizeID(id);
-    downloadURL(url, (id || room)+'.video.mp4');
-  }
-
-  function downloadAudio(url, id) {
-    id = sanitizeID(id);
-    downloadURL(url, (id || room)+'.audio.wav');
   }
 
   function downloadURL(url, fileName) {
@@ -167,7 +212,32 @@ function init() {
       // Open the image in a popup
       window.open(url, fileName);
     }
-  };
+  }
+
+  function downloadVideo(url, name) {
+    id = sanitizeFilename(name);
+    downloadURL(url, name+'.video.mp4');
+  }
+
+  function downloadAudio(url, name) {
+    id = sanitizeFilename(name);
+    downloadURL(url, name+'.audio.wav');
+  }
+
+  function downloadSession(event) {
+    var session = {
+      log: log,
+      questions: questions
+    };
+
+    var data = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(session));
+
+    // Download the session JSON
+    downloadURL('data:'+data, room+'.session.json');
+
+    // Download the recordings
+    downloadRecordings();
+  }
 
   /*
     Collaborator has joined
@@ -180,18 +250,29 @@ function init() {
     if (isFirefox) {
       videoRecorder = RecordRTC(stream, recorderOptions);
       videoRecorder.startRecording();
+      videoRecorder.startTime = Date.now();
+      track('video.started', {
+        user: ourUser
+      });
     }
     else {
       // Separate streams for Chrome
       audioRecorder = RecordRTC(stream, {
         onAudioProcessStarted: function( ) {
           videoRecorder.startRecording();
+          track('video.started', {
+            user: ourUser
+          });
         }
       });
 
       videoRecorder = RecordRTC(stream, recorderOptions);
 
       audioRecorder.startRecording();
+      audioRecorder.startTime = videoRecorder.startTime = Date.now();
+      track('audio.started', {
+        user: ourUser
+      });
     }
   });
 
@@ -200,25 +281,6 @@ function init() {
   */
   webrtc.on('videoAdded', function(video, peer) {
     console.log('Collaborator joined!');
-
-    track('collaborator.joined', { name: peer.id });
-
-    if (isFirefox) {
-      peer.videoRecorder = RecordRTC(peer.stream, recorderOptions);
-      peer.videoRecorder.startRecording();
-    }
-    else {
-      // Separate streams for Chrome
-      peer.audioRecorder = RecordRTC(peer.stream, {
-        onAudioProcessStarted: function( ) {
-          peer.videoRecorder.startRecording();
-        }
-      });
-
-      peer.videoRecorder = RecordRTC(peer.stream, recorderOptions);
-
-      peer.audioRecorder.startRecording();
-    }
 
     // Update video count
     setVideoCount(+1);
@@ -247,11 +309,11 @@ function init() {
   });
 
   function storeAudioTrack(url, peer) {
-    audioURLs[peer.id] = url;
+    audioURLs[peer.user || peer.id] = url;
   }
 
   function storeVideoTrack(url, peer) {
-    videoURLs[peer.id] = url;
+    videoURLs[peer.user || peer.id] = url;
   }
 
   /*
@@ -260,14 +322,20 @@ function init() {
   webrtc.on('videoRemoved', function(video, peer) {
     console.log('Collaborator left!');
 
-    track('collaborator.left', { name: peer.id });
+    track('collaborator.left', { user: peer.user });
 
     if (peer.audioRecorder) {
+      track('audio.stopped', {
+        user: peer.user
+      });
       peer.audioRecorder.stopRecording(function(url) {
         storeAudioTrack(url, peer);
       });
     }
     if (peer.videoRecorder) {
+      track('video.stopped', {
+        user: peer.user
+      });
       peer.videoRecorder.stopRecording(function(url) {
         storeVideoTrack(url, peer);
       });
@@ -295,6 +363,22 @@ function init() {
       else if (data.type === 'stoppedSpeaking') {
         hideSpeaking(document.getElementById('volume_' + peer.id));
       }
+      else if (data.type === 'hello') {
+        if (!peer.user) {
+          console.warn('Got username for '+peer.id+': '+peer.user);
+          peer.user = data.payload.user;
+
+          track('collaborator.joined', { user: peer.user });
+          recordPeer(peer);
+
+          if (currentQuestionIndex !== 0) {
+            // Send current question to peer if we're not on the first one
+            broadcastQuestions(peer);
+          }
+
+          broadcastName(peer);
+        }
+      }
       else if (data.type === 'changeQuestion') {
         // Use questions from peer
         questions = data.payload.questions;
@@ -303,7 +387,7 @@ function init() {
         showQuestion(data.payload.questionIndex, true);
 
         track('showQuestion', {
-          peer: peer.id,
+          user: peer.user,
           question: data.payload.questionIndex
         });
       }
@@ -329,7 +413,8 @@ function init() {
   $(document.body).on('click', '.js-saveBookmark', function() {
     var data = {
       question: currentQuestionIndex,
-      code: currentQuestion.code
+      code: currentQuestion.code,
+      user: ourUser
     };
 
     track('bookmark', data);
@@ -436,8 +521,12 @@ function init() {
     els.$editor.hide();
   }
 
-  function broadcastQuestions() {
-    webrtc.sendDirectlyToAll('simplewebrtc', 'changeQuestion', { questions: questions, questionIndex: currentQuestionIndex });
+  function broadcastName(peer) {
+    (peer ? peer.sendDirectly : webrtc.sendDirectlyToAll).call(peer || webrtc, 'simplewebrtc', 'hello', { user: ourUser });
+  }
+
+  function broadcastQuestions(peer) {
+    (peer ? peer.sendDirectly : webrtc.sendDirectlyToAll).call(peer || webrtc, 'simplewebrtc', 'changeQuestion', { questions: questions, questionIndex: currentQuestionIndex });
   }
 
   function resetOutput() {
@@ -515,10 +604,10 @@ function init() {
     }
 
     track('codeExecuted', {
-      peer: 'self',
       question: currentQuestionIndex,
       output: console.output,
-      results: results
+      results: results,
+      user: ourUser
     });
 
     var resultMessage = 'Test results: \n';
@@ -530,49 +619,39 @@ function init() {
     alert(resultMessage);
   }
 
-  function track(event, data) {
+  function getTime() {
+    return Date.now() - startTime;
+  }
+
+  function track(eventName, data) {
     var obj = {
-      date: new Date().toISOString(),
-      event: event
+      time: getTime(),
+      event: eventName
     };
 
-    var peer;
-    if (typeof data !== 'undefined') {
-      // Copy peer property from data object
-      peer = data.peer;
-      data.peer = undefined;
-
-      obj.data = JSON.parse(JSON.stringify(data)); // @todo keep as JSON for @perf?
-    }
-
     // Log events as originating from self by default
-    obj.peer = peer || 'self';
+    if (typeof data !== 'undefined') {
+      var user = data.user;
+      data.user = undefined;
+
+      // Copy peer property from data object
+      obj.data = JSON.parse(JSON.stringify(data)); // @todo keep as JSON for @perf?
+      obj.user = user;
+    }
+    else {
+      obj.user = ourUser;
+    }
 
     log.push(obj);
 
-    // console.log('%s: %s', event, JSON.stringify(obj));
+    console.log('%s: %s', eventName, JSON.stringify(obj));
   }
 
   function trackSelfShowQuestion() {
     track('showQuestion', {
-      peer: 'self',
+      user: ourUser,
       question: currentQuestionIndex
     });
-  }
-
-  function downloadSession(event) {
-    var session = {
-      log: log,
-      questions: questions
-    };
-
-    var data = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(session));
-
-    // Download the session JSON
-    downloadURL('data:'+data, room+'.session.json');
-
-    // Download the recordings
-    downloadVideos();
   }
 
   function showQuestion(questionIndex, noTrigger) {
