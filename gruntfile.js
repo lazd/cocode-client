@@ -23,11 +23,12 @@ module.exports = function(grunt) {
   };
 
   var browserifyFiles = {
-    'build/index.js': 'source/js/index.js'
+    'build/index.js': 'source/js/index.js',
+    'build/play.js': 'source/js/play.js'
   };
 
   var resourcesFiles = [
-    'index.html',
+    '*.html',
     'images/*'
   ];
 
@@ -92,6 +93,12 @@ module.exports = function(grunt) {
       resources: {
         cwd: 'source/',
         src: resourcesFiles,
+        dest: 'build/',
+        expand: true
+      },
+      results: {
+        cwd: 'source/',
+        src: 'results/**',
         dest: 'build/',
         expand: true
       },
