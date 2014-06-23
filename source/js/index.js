@@ -699,7 +699,8 @@ function init() {
   function trackSelfShowQuestion() {
     track('showQuestion', {
       user: ourUser,
-      question: currentQuestionIndex
+      questionIndex: currentQuestionIndex,
+      question: currentQuestion
     });
   }
 
