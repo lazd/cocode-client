@@ -49,7 +49,7 @@ function init() {
     seekTo(time);
   });
 
-  load('cocodetest');
+  load('lazdcode');
 }
 
 var raf =
@@ -142,7 +142,7 @@ function handleEvent(event) {
   console.log(event);
 
   if (name === 'showQuestion') {
-    handleShowQuestion(data.question);
+    handleShowQuestion(data.questionIndex, data.question);
   }
   else if (name === 'editor.selection') {
     handleEditorSelections(data.selections);
@@ -270,20 +270,7 @@ function hideCode() {
   els.$editor.hide();
 }
 
-/*function handleShowQuestion(currentQuestion) {
-  if (!currentQuestion) {
-    console.error('Invalid question!', questionIndex);
-    return;
-  }
-*/
-function handleShowQuestion(questionIndex) {
-  var currentQuestion = interview.questions[questionIndex];
-
-  if (!currentQuestion) {
-    console.error('Question at index %d not found!', questionIndex);
-    return;
-  }
-
+function handleShowQuestion(questionIndex, currentQuestion) {
   if (currentQuestion.code) {
     setRoom('Question '+(questionIndex+1), currentQuestion.name);
   }
@@ -305,8 +292,7 @@ function handleShowQuestion(questionIndex) {
   }
 
   if (currentQuestion.code) {
-    // showCode(currentQuestion.code);
-    showCode();
+    showCode(currentQuestion.code);
   }
   else {
     hideCode();
