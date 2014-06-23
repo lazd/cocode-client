@@ -273,7 +273,7 @@ function init() {
 
     log.push(obj);
 
-    console.log('%s: %s', event, JSON.stringify(obj));
+    // console.log('%s: %s', event, JSON.stringify(obj));
   }
 
   function trackSelfShowQuestion() {
