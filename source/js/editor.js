@@ -16,6 +16,7 @@ module.exports = function(simplewebrtc, track) {
     dragDrop: false, // Too hard to sync between clients
     mode: 'javascript',
     lineNumbers: true,
+    indentUnit: 2,
     theme: 'ambiance',
     viewportMargin: Infinity
   });
