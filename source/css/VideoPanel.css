@@ -46,6 +46,8 @@
   width: 100%;
 
   -webkit-box-reflect: below 0px -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(90%, transparent), to(rgba(0,0,0,0.35)));
+  -moz-box-reflect: below 0px -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(90%, transparent), to(rgba(0,0,0,0.35)));
+  box-reflect: below 0px -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(90%, transparent), to(rgba(0,0,0,0.35)));
 }
 
 .cc-VideoPanel--small .cc-Video video {
@@ -57,6 +59,8 @@
 
 .cc-VideoPanel--2 .cc-Video:nth-child(1) > * {
   -webkit-transform: perspective(var(--videoPanel-2-perspective)) rotate3d(0, 1, 0, var(--videoPanel-2-rotation)) skew(0, calc(-1 * var(--videoPanel-2-skew)));
+  -moz-transform: rotate3d(0, 1, 0, var(--videoPanel-2-rotation)) skew(0, calc(-1 * var(--videoPanel-2-skew)));
+  transform: perspective(var(--videoPanel-2-perspective)) rotate3d(0, 1, 0, var(--videoPanel-2-rotation)) skew(0, calc(-1 * var(--videoPanel-2-skew)));
 }
 .cc-VideoPanel--2 .cc-Video:nth-child(1) {
   text-align: right;
@@ -64,6 +68,8 @@
 
 .cc-VideoPanel--2 .cc-Video:nth-child(2) > * {
   -webkit-transform: perspective(var(--videoPanel-2-perspective)) rotate3d(0, 1, 0, calc(-1 * var(--videoPanel-2-rotation))) skew(0, var(--videoPanel-2-skew));
+  -moz-transform: rotate3d(0, 1, 0, calc(-1 * var(--videoPanel-2-rotation))) skew(0, var(--videoPanel-2-skew));
+  transform: perspective(var(--videoPanel-2-perspective)) rotate3d(0, 1, 0, calc(-1 * var(--videoPanel-2-rotation))) skew(0, var(--videoPanel-2-skew));
 }
 .cc-VideoPanel--2 .cc-Video:nth-child(2) > .cc-Video-speaking {
   left: 3%;
@@ -87,6 +93,8 @@
 }
 .cc-VideoPanel--3 .cc-Video:nth-child(2) > * {
   -webkit-transform: perspective(var(--videoPanel-3-perspective)) rotate3d(0, 1, 0, var(--videoPanel-3-rotation)) skew(0, calc(-1 * var(--videoPanel-3-skew)));
+  -moz-transform: rotate3d(0, 1, 0, var(--videoPanel-3-rotation)) skew(0, calc(-1 * var(--videoPanel-3-skew)));
+  transform: perspective(var(--videoPanel-3-perspective)) rotate3d(0, 1, 0, var(--videoPanel-3-rotation)) skew(0, calc(-1 * var(--videoPanel-3-skew)));
 }
 .cc-VideoPanel--3 .cc-Video:nth-child(2) > .cc-Video-speaking {
   right: 4%;
@@ -98,6 +106,8 @@
 }
 .cc-VideoPanel--3 .cc-Video:nth-child(1) > * {
   -webkit-transform: scaleX(-1) perspective(var(--videoPanel-3-perspective)) rotate3d(0, 0, 0, 0) translate3d(0, -4px, 0);
+  -moz-transform: scaleX(-1) rotate3d(0, 0, 0, 0) translate3d(0, -4px, 0);
+  transform: scaleX(-1) perspective(var(--videoPanel-3-perspective)) rotate3d(0, 0, 0, 0) translate3d(0, -4px, 0);
 }
 
 .cc-VideoPanel--3 .cc-Video:nth-child(3) {
@@ -110,6 +120,8 @@
 }
 .cc-VideoPanel--3 .cc-Video:nth-child(3) > * {
   -webkit-transform: perspective(var(--videoPanel-3-perspective)) rotate3d(0, 1, 0, calc(-1 * var(--videoPanel-3-rotation))) skew(0, var(--videoPanel-3-skew));
+  -moz-transform: rotate3d(0, 1, 0, calc(-1 * var(--videoPanel-3-rotation))) skew(0, var(--videoPanel-3-skew));
+  transform: perspective(var(--videoPanel-3-perspective)) rotate3d(0, 1, 0, calc(-1 * var(--videoPanel-3-rotation))) skew(0, var(--videoPanel-3-skew));
 }
 .cc-VideoPanel--3 .cc-Video:nth-child(3) > .cc-Video-speaking {
   left: 4%;
