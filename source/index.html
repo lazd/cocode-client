@@ -40,22 +40,24 @@
             </div>
         </div>
 
-        <div class="cc-VideoContainer cc-VideoContainer--small cc-VideoContainer--bottom">
-            <div class="cc-Video cc-Video--small">
+        <div class="cc-Interview">
+            <div class="cc-Interview-component" id="cc-EditorComponent">
+                <textarea id="cc-Code"></textarea>
+            </div>
+        </div>
+
+        <div class="cc-VideoPanel cc-VideoPanel--full" id="cc-VideoPanel">
+            <div class="cc-Video">
                 <video id="cc-LocalVideo" oncontextmenu="return false;"></video>
                 <!-- <div id="cc-LocalVolume" class="cc-Icon"></div> -->
             </div>
         </div>
 
-        <div class="cc-VideoContainer cc-VideoContainer--top" id="cc-RemoteVideo"></div>
-
-        <textarea id="cc-Code"></textarea>
-
         <div class="cc-Footer">
             <div class="cc-ButtonBar cc-Header-column cc-Header-column--center">
-                <button class="cc-IconButton cc-IconButton--large"><i class="icon-arrow-left"></i></button>
-                <button class="cc-IconButton cc-IconButton--large"><i class="icon-bookmark"></i></button>
-                <button class="cc-IconButton cc-IconButton--large"><i class="icon-arrow-right"></i></button>
+                <button class="cc-IconButton cc-IconButton--large js-previousQuestion"><i class="icon-arrow-left"></i></button>
+                <button class="cc-IconButton cc-IconButton--large js-saveBookmark"><i class="icon-bookmark"></i></button>
+                <button class="cc-IconButton cc-IconButton--large js-nextQuestion"><i class="icon-arrow-right"></i></button>
             </div>
         </div>
     </body>

@@ -8,15 +8,16 @@ require('codemirror/mode/clike/clike');
 require('codemirror/mode/ruby/ruby');
 require('codemirror/mode/python/python');
 
-module.exports = function(simplewebRTC) {
+module.exports = function(simplewebrtc) {
   // Get the webrtc instance from the SimpleWebRTC instance
-  var webRTC = simplewebRTC.webrtc;
+  var webrtc = simplewebrtc.webrtc;
 
   var editor = CodeMirror.fromTextArea(document.getElementById('cc-Code'), {
-    dragDrop: false, // Too hard to handle in code
+    dragDrop: false, // Too hard to sync between clients
     mode: 'javascript',
     lineNumbers: true,
-    theme: 'ambiance'
+    theme: 'ambiance',
+    viewportMargin: Infinity
   });
 
   // Handle language changes
@@ -25,7 +26,7 @@ module.exports = function(simplewebRTC) {
 
     editor.setOption('mode', language);
 
-    webRTC.sendDirectlyToAll('simplewebrtc', 'changeLanguage', language);
+    webrtc.sendDirectlyToAll('simplewebrtc', 'changeLanguage', language);
   });
 
   function broadcastEditorContents() {
@@ -36,16 +37,14 @@ module.exports = function(simplewebRTC) {
       console.log('Sending editor contents to peers!');
 
       // When the channel is open, send the current contents of the editor to everyone
-      webRTC.sendDirectlyToAll('simplewebrtc', 'refresh', editorContents);
+      webrtc.sendDirectlyToAll('simplewebrtc', 'refresh', editorContents);
 
       // Send the current language
-      webRTC.sendDirectlyToAll('simplewebrtc', 'changeLanguage', language);
+      webrtc.sendDirectlyToAll('simplewebrtc', 'changeLanguage', language);
     }
   }
 
-  webRTC.on('channelOpen', function(channel) {
-    console.log('%s opened!', channel.label);
-
+  webrtc.on('channelOpen', function(channel) {
     if (channel.label === 'simplewebrtc') {
       // When the editor channel opens, broadcast the goodies
       // This is a bit redundant because we tried to do that when peerStreamAdded
@@ -54,15 +53,7 @@ module.exports = function(simplewebRTC) {
     }
   });
 
-  webRTC.on('channelClose', function(channel) {
-    console.warn('%s closed!', channel.label);
-  });
-
-  webRTC.on('channelError', function(label, error) {
-    console.error('Error on %s: %s', label, error);
-  });
-
-  webRTC.on('channelMessage', function (peer, label, data) {
+  webrtc.on('channelMessage', function (peer, label, data) {
     if (label === 'simplewebrtc') {
       var payload = data.payload;
       if (data.type === 'refresh') {
@@ -93,14 +84,14 @@ module.exports = function(simplewebRTC) {
 
   editor.on('change', function(i, op) {
     if (editorOperations.indexOf(op.origin) !== -1) {
-      webRTC.sendDirectlyToAll('simplewebrtc', 'change', op);
+      webrtc.sendDirectlyToAll('simplewebrtc', 'change', op);
     }
   });
 
   editor.on('cursorActivity', function() {
     var selections = editor.doc.listSelections();
 
-    webRTC.sendDirectlyToAll('simplewebrtc', 'selection', selections);
+    webrtc.sendDirectlyToAll('simplewebrtc', 'selection', selections);
   });
 
   var marks = [];

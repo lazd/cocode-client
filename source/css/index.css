@@ -18,6 +18,8 @@
 @import 'ButtonBar.css';
 @import 'Dialog.css';
 @import 'Header.css';
+@import 'Interview.css';
+@import 'VideoPanel.css';
 
 .cc-RoomName {
   display: inline;
@@ -94,13 +96,6 @@
 .cc-Video {
   position: relative;
   display: block;
-  height: 128px;
-
-  background: gray;
-}
-
-.cc-Video--small {
-  height: 64px;
 }
 
 .cc-Video--canEnlarge {
@@ -112,7 +107,7 @@
 }
 
 .cc-Video video {
-  display: block;
+  display: inline-block;
   max-height: 100%;
 }
 

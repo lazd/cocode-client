@@ -4,13 +4,3 @@ body {
   height: 100%;
   font-family: 'Lato', Helvetica, sans-serif;
 }
-
-.CodeMirror {
-  position: absolute;
-  top: 64px; /* Below header */
-  bottom: 64px; /* Above footer */
-  left: 0;
-  right: 0;
-
-  height: auto;
-}

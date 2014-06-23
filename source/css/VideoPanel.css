@@ -1,0 +1,115 @@
+:root {
+  --videoPanel-2-skew: 2deg;
+  --videoPanel-2-rotation: 12deg;
+  --videoPanel-2-perspective: 6000;
+
+  --videoPanel-3-skew: 1deg;
+  --videoPanel-3-rotation: 24deg;
+  --videoPanel-3-perspective: 0;
+}
+
+.cc-VideoPanel {
+  box-sizing: border-box;
+  width: 100%;
+
+  padding: 0 calc(var(--headerHeight) / 2);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cc-VideoPanel--full {
+  z-index: 10;
+  position: fixed;
+  top: var(--headerHeight);
+  bottom: var(--headerHeight);
+}
+
+.cc-VideoPanel--small {
+  top: auto;
+  height: 200px;
+}
+
+.cc-VideoPanel .cc-Video {
+  position: relative;
+
+  flex: 1;
+
+  text-align: center;
+}
+
+.cc-VideoPanel .cc-Video video {
+  height: 100%;
+  width: 100%;
+
+  -webkit-box-reflect: below 0px -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(90%, transparent), to(rgba(0,0,0,0.35)));
+}
+
+.cc-VideoPanel--small .cc-Video video {
+  width: auto;
+  height: 175px;
+}
+
+/* Two video panel */
+
+.cc-VideoPanel--2 .cc-Video:nth-child(1) > * {
+  -webkit-transform: perspective(var(--videoPanel-2-perspective)) rotate3d(0, 1, 0, var(--videoPanel-2-rotation)) skew(0, calc(-1 * var(--videoPanel-2-skew)));
+}
+.cc-VideoPanel--2 .cc-Video:nth-child(1) {
+  text-align: right;
+}
+
+.cc-VideoPanel--2 .cc-Video:nth-child(2) > * {
+  -webkit-transform: perspective(var(--videoPanel-2-perspective)) rotate3d(0, 1, 0, calc(-1 * var(--videoPanel-2-rotation))) skew(0, var(--videoPanel-2-skew));
+}
+.cc-VideoPanel--2 .cc-Video:nth-child(2) > .cc-Video-speaking {
+  left: 3%;
+  bottom: 4%;
+  top: auto;
+  right: auto;
+}
+.cc-VideoPanel--2 .cc-Video:nth-child(2) {
+  text-align: left;
+}
+
+
+/* Three video panel */
+
+.cc-VideoPanel--3 .cc-Video:nth-child(2) {
+  order: 1;
+  /*flex: 1.125;*/
+}
+.cc-VideoPanel--3 .cc-Video:nth-child(2) {
+  text-align: right;
+}
+.cc-VideoPanel--3 .cc-Video:nth-child(2) > * {
+  -webkit-transform: perspective(var(--videoPanel-3-perspective)) rotate3d(0, 1, 0, var(--videoPanel-3-rotation)) skew(0, calc(-1 * var(--videoPanel-3-skew)));
+}
+.cc-VideoPanel--3 .cc-Video:nth-child(2) > .cc-Video-speaking {
+  right: 4%;
+  bottom: 2%;
+}
+
+.cc-VideoPanel--3 .cc-Video:nth-child(1) {
+  order: 2;
+}
+.cc-VideoPanel--3 .cc-Video:nth-child(1) > * {
+  -webkit-transform: scaleX(-1) perspective(var(--videoPanel-3-perspective)) rotate3d(0, 0, 0, 0) translate3d(0, -4px, 0);
+}
+
+.cc-VideoPanel--3 .cc-Video:nth-child(3) {
+  /*flex: 1.125;*/
+  order: 3;
+
+}
+.cc-VideoPanel--3 .cc-Video:nth-child(3) {
+  text-align: left;
+}
+.cc-VideoPanel--3 .cc-Video:nth-child(3) > * {
+  -webkit-transform: perspective(var(--videoPanel-3-perspective)) rotate3d(0, 1, 0, calc(-1 * var(--videoPanel-3-rotation))) skew(0, var(--videoPanel-3-skew));
+}
+.cc-VideoPanel--3 .cc-Video:nth-child(3) > .cc-Video-speaking {
+  left: 4%;
+  bottom: 2%;
+}
