@@ -21,6 +21,7 @@ function init() {
     local: '#cc-LocalVideo',
     languageSelect: '#cc-Language',
     editor: '#cc-EditorComponent',
+    runCodeButton: '.js-runCode',
     downloadButton: '#cc-DownloadButton'
   };
 
@@ -169,7 +170,8 @@ function init() {
 
   $(document.body).on('click', '.js-saveBookmark', function() {
     var data = {
-      question: currentQuestion
+      question: currentQuestionIndex,
+      code: currentQuestion.code
     };
 
     track('bookmark', data);
@@ -179,9 +181,14 @@ function init() {
     downloadSession(event);
   });
 
+  $(document.body).on('click', '.js-runCode', function(event) {
+    runCode();
+  });
+
   // Save code changes to the question so it shows when revisited
   editor.on('change', function(i, op) {
     currentQuestion.code = editor.getValue();
+    setRunButtonStatus();
   });
 
   // Handle create room form
@@ -199,8 +206,22 @@ function init() {
     return false;
   });
 
+  function setRunButtonStatus() {
+    if (!currentQuestion.code) {
+      els.runCodeButton.disabled = true;
+    }
+    else {
+      els.runCodeButton.disabled = false;
+    }
+  }
+
+  function setPrevNextStatus() {
+    $('.js-previousQuestion').attr('disabled', currentQuestionIndex === 0);
+    $('.js-nextQuestion').attr('disabled', currentQuestionIndex === questions.length - 1);
+  }
+
   // @todo change to setTitle, separate room creation into a different method
-  function setRoom(name) {
+  function setRoom(name, subTitle) {
     if (name) {
       var url = window.location.href;
       $('#cc-CreateRoom').hide();
@@ -210,6 +231,13 @@ function init() {
     else {
       $('#cc-CreateRoom').show();
       $('#cc-JoinLink').addClass('u-hidden');
+    }
+
+    if (subTitle) {
+      $('#cc-SubTitle').show().text(subTitle);
+    }
+    else {
+      $('#cc-SubTitle').hide();
     }
   }
 
@@ -251,6 +279,96 @@ function init() {
 
   function broadcastQuestions() {
     webrtc.sendDirectlyToAll('simplewebrtc', 'changeQuestion', { questions: questions, questionIndex: currentQuestionIndex });
+  }
+
+  function resetOutput() {
+    console.output = '';
+  }
+
+  function runCode() {
+    var func;
+    var results = [];
+    var testOutput = '';
+
+    resetOutput();
+
+    // Build function body
+    var functionBody = editor.getValue();
+    if (currentQuestion.test) {
+      functionBody += ';('+currentQuestion.test.toString()+'());';
+    }
+
+    // Parse code
+    try {
+      func = new Function(functionBody);
+    }
+    catch(error) {
+      results.push({
+        message: 'Code doesn\'t parse: '+error,
+        error: error
+      });
+    }
+
+    if (func) {
+      // Shim log/assert
+      var assert = console.assert;
+      var log = console.log;
+      console.log = function(string) {
+        console.output = typeof console.output === 'string' ? console.output : '';
+        console.output += string;
+        testOutput += string;
+      };
+
+      console.assert = function(test, message, reason) {
+        if (!test) {
+          results.push({
+            value: test,
+            message: 'Test failed: '+message,
+            reason: reason,
+            output: testOutput,
+            error: true
+          });
+        }
+        else {
+          results.push({
+            value: test,
+            output: testOutput,
+            message: 'Test passed: '+message
+          });
+        }
+        testOutput = '';
+      };
+
+      try {
+        // Run the input and tests
+        func.call(null);
+      }
+      catch(error) {
+        results.push({
+          message: 'Code errors: '+error,
+          error: error
+        });
+      }
+
+      // Remove shims
+      console.assert = assert;
+      console.log = log;
+    }
+
+    track('codeExecuted', {
+      peer: 'self',
+      question: currentQuestionIndex,
+      output: console.output,
+      results: results
+    });
+
+    var resultMessage = 'Test results: \n';
+    results.forEach(function(result) {
+      var win = result.error ? 'X' : '✓';
+      resultMessage += '  ['+win+'] '+result.message+'\n';
+    });
+
+    alert(resultMessage);
   }
 
   function track(event, data) {
@@ -314,7 +432,12 @@ function init() {
       currentQuestionIndex = questionIndex;
       currentQuestion = questions[questionIndex];
 
-      setRoom(room+': '+currentQuestion.name);
+      if (currentQuestion.code) {
+        setRoom('Question '+(questionIndex+1), currentQuestion.name);
+      }
+      else {
+        setRoom(currentQuestion.name);
+      }
 
       if (currentQuestion.video) {
         showVideo();
@@ -336,8 +459,8 @@ function init() {
         hideCode();
       }
 
-      $('.js-previousQuestion').attr('disabled', questionIndex === 0);
-      $('.js-nextQuestion').attr('disabled', questionIndex === questions.length - 1);
+      setRunButtonStatus();
+      setPrevNextStatus();
 
       if (!noTrigger) {
         broadcastQuestions();

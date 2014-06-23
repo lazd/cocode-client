@@ -16,6 +16,19 @@
   top: 0;
 }
 
+.cc-Header-h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+
+.cc-Header-h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 300;
+}
+
 .cc-Footer {
   bottom: 0;
 }

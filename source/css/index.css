@@ -21,11 +21,6 @@
 @import 'Interview.css';
 @import 'VideoPanel.css';
 
-.cc-RoomName {
-  display: inline;
-  margin: 0;
-}
-
 .cc-JoinLink {
   position: relative;
   font-weight: bold;
