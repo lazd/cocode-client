@@ -8,7 +8,7 @@ require('codemirror/mode/clike/clike');
 require('codemirror/mode/ruby/ruby');
 require('codemirror/mode/python/python');
 
-module.exports = function(simplewebrtc) {
+module.exports = function(simplewebrtc, track) {
   // Get the webrtc instance from the SimpleWebRTC instance
   var webrtc = simplewebrtc.webrtc;
 
@@ -59,16 +59,36 @@ module.exports = function(simplewebrtc) {
       if (data.type === 'refresh') {
         console.log('Refreshing editor contents');
         editor.setValue(payload);
+
+        track('editor.refreshed', {
+          peer: peer.id,
+          payload: payload
+        });
       }
       else if (data.type === 'change') {
         editor.replaceRange(payload.text, payload.from, payload.to);
+
+        track('editor.changed', {
+          peer: peer.id,
+          change: payload
+        });
       }
       else if (data.type === 'changeLanguage') {
         $('#cc-Language').val(payload);
         editor.setOption('mode', payload);
+
+        track('editor.languageChange', {
+          peer: peer.id,
+          language: payload
+        });
       }
       else if (data.type === 'selection') {
         highlightSelections(payload);
+
+        track('editor.selection', {
+          peer: peer.id,
+          payload: payload
+        });
       }
     }
   });
@@ -85,6 +105,11 @@ module.exports = function(simplewebrtc) {
   editor.on('change', function(i, op) {
     if (editorOperations.indexOf(op.origin) !== -1) {
       webrtc.sendDirectlyToAll('simplewebrtc', 'change', op);
+
+      track('editor.changed', {
+        peer: 'self',
+        change: op
+      });
     }
   });
 
@@ -92,6 +117,11 @@ module.exports = function(simplewebrtc) {
     var selections = editor.doc.listSelections();
 
     webrtc.sendDirectlyToAll('simplewebrtc', 'selection', selections);
+
+    track('editor.selection', {
+      peer: 'self',
+      payload: selections
+    });
   });
 
   var marks = [];
