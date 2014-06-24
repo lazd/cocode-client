@@ -1,4 +1,5 @@
 var $ = require('jquery');
+var raf = require('./raf.js');
 var CodeMirror = require('codemirror');
 
 // Include modes
@@ -16,6 +17,13 @@ var videoCount = 0;
 var marks = [];
 var videoEls = [];
 var audioEls = [];
+
+// ms the loop has been running
+var loopTime = 0;
+
+// The ms in loop time of the last reset
+var currentTime = 0;
+
 var interviewName;
 var els = {
   audioPanel: '#cc-AudioPanel',
@@ -45,33 +53,33 @@ function init() {
     els[el] = els['$'+el][0];
   }
 
+  // Listen to seek events
   $(els.videoTime).on('change', function() {
-    console.log('Not implemented!');
-    // var time = els.videoTime.value;
-    // seekTo(time);
+    // So it updates
+    els.videoTime.blur();
+
+    var time = els.videoTime.value;
+    seekTo(time);
   });
 
+  // Load the interview specified in the hash
+  // @todo make time linkable when seek works
   load(window.location.hash.slice(1));
 }
 
-var raf =
-  window.requestAnimationFrame ||
-  window.mozRequestAnimationFrame ||
-  window.msRequestAnimationFrame ||
-  window.oRequestAnimationFrame ||
-  window.webkitRequestAnimationFrame;
-
 function play() {
-  running = true;
+  paused = false;
   raf(loop);
 }
 
 function pause() {
-  // Pause all audio
-  // Pause all video
+  // Pause all audio and video
+  eachMedia(function(el) {
+    el.pause();
+  });
 
   // Pause event playback
-  running = false;
+  paused = true;
 }
 
 function load(interviewNameToLoad) {
@@ -170,6 +178,7 @@ function preloadTracks(cb) {
   for (var i = 0; i < interview.log.length; i++) {
     var event = interview.log[i];
     var eventName = event.event;
+    var time = event.time;
     var user = event.user;
     var track = null;
     if (eventName === 'video.started') {
@@ -180,31 +189,40 @@ function preloadTracks(cb) {
     }
 
     if (track) {
+      track._startTime = time;
       track.addEventListener('canplay', handleCanPlay);
       toLoad++;
     }
   }
 }
 
+var last = 0;
 function loop(time) {
-  if (!running) {
-    return;
-  }
+  var delta = time - last;
+  last = time;
 
-  // Update time bar
-  els.videoTime.value = time;
-  els.videoTimeDisplay.textContent = getPrettyTime(time);
+  if (!paused) {
+    // Calculate time
+    currentTime += delta;
 
-  var nextEvent = interview.log[eventIndex];
-
-  if (nextEvent) {
-    if (time >= nextEvent.time) {
-      handleEvent(nextEvent, eventIndex);
-      eventIndex++;
+    // Update time bar
+    if (!els.$videoTime.is(':focus')) {
+      els.videoTime.value = currentTime;
     }
-  }
-  else {
-    pause();
+
+    els.videoTimeDisplay.textContent = getPrettyTime(currentTime);
+
+    var nextEvent = interview.log[eventIndex];
+
+    if (nextEvent) {
+      if (currentTime >= nextEvent.time) {
+        handleEvent(nextEvent, eventIndex);
+        eventIndex++;
+      }
+    }
+    else {
+      pause();
+    }
   }
 
   raf(loop);
@@ -244,10 +262,23 @@ function setEventIndex(time) {
   // Find event matching time
   // Set as current event
   // Continue
-  var nextEvent = interview.log[eventIndex];
-  while (nextEvent && nextEvent.time < time) {
+  var event = null;
+  var i = 0;
 
+  // Clear editor
+  editor.setValue('');
+
+  // Replay events
+  for (var i = 0; i < interview.log.length; i++) {
+    if (interview.log[i].time > time) {
+      i--;
+      break;
+    }
+
+    handleEvent(interview.log[i], i);
   }
+
+  eventIndex = 1;
 }
 
 function handleEvent(event, index) {
@@ -255,7 +286,7 @@ function handleEvent(event, index) {
   var data = event.data;
   var user = event.user;
 
-  console.log(event);
+  // console.log(event);
 
   if (name === 'showQuestion') {
     handleShowQuestion(data.questionIndex, data.question);
@@ -429,29 +460,52 @@ function handleLanguageChange(language) {
   $('#cc-Language').val(language);
 }
 
-function seekTo(time) {
+function eachMedia(cb) {
   var success = true;
   for (var i = 0; i < audioEls.length; i++) {
-    var el = audioEls[i];
-
-    if (el.readyState !== 0) {
-      el.currentTime = time/1000;
-    }
-    else {
+    if (!cb(audioEls[i])) {
       success = false;
     }
   }
   for (var i = 0; i < videoEls.length; i++) {
-    var el = videoEls[i];
-
-    if (el.readyState !== 0) {
-      el.currentTime = time/1000;
-    }
-    else {
+    if (!cb(videoEls[i])) {
       success = false;
     }
   }
   return success;
+}
+
+function seekTo(time) {
+  time = parseInt(time);
+  currentTime = time;
+
+  // Unpause
+  paused = false;
+
+  // Seek or hide media
+  eachMedia(function(el) {
+    // If the video should be playing
+    var newTime = (time - el._startTime)/1000;
+    if (newTime > 0) {
+      // Set its current time
+      console.log('Setting media time to ', newTime);
+      el.play();
+      el.currentTime = newTime;
+      el.style.display = '';
+    }
+    else {
+      console.log('Stopping media ', newTime);
+      el.currentTime = 0;
+      el.pause();
+      el.style.display = 'none';
+    }
+  });
+
+  // Replay all events
+  setEventIndex(time);
+
+  // @todo
+  // setVideoCount();
 }
 
 $(init);
