@@ -445,8 +445,8 @@ function handleEvent(event, index) {
     handleAudioStarted(index);
   }
   else if (name === 'video.ended') {
-    // @todo hide video
-    setVideoCount(--videoCount);
+    // @todo #27 hide video
+    // setVideoCount();
   }
 }
 
@@ -461,6 +461,15 @@ function hideSpeaking(el, volume) {
 }
 
 function setVideoCount(count) {
+  if (count === undefined) {
+    count = 0;
+    videoEls.forEach(function(el) {
+      if (el.style.display !== 'none') {
+        count++;
+      }
+    });
+  }
+
   videoCount = count;
 
   els.videoPanel.className = els.videoPanel.className.replace(/cc-VideoPanel--\d+/g, '');
@@ -468,12 +477,12 @@ function setVideoCount(count) {
 }
 
 function handleVideoStarted(index) {
-  // Update video count
-  setVideoCount(++videoCount);
-
   var video = preloadedTracks[index];
   video.style.display = '';
   video.play();
+
+  // Update video count
+  setVideoCount();
 }
 
 function handleAudioStarted(index) {
