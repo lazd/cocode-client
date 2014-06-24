@@ -43,7 +43,8 @@ var els = {
   videoTotalTimeDisplay: '#cc-VideoTotalTimeDisplay',
   prevBookmarkButton: '.js-prevBookmark',
   nextBookmarkButton: '.js-nextBookmark',
-  markerContainer: '#cc-BookmarkMarkerContainer'
+  markerContainer: '#cc-BookmarkMarkerContainer',
+  playPauseButtonIcon: '.js-playPause > i'
 };
 
 var editor;
@@ -75,6 +76,7 @@ function init() {
 
   $(document).on('click', '.js-prevBookmark', seekToPrevBookmark);
   $(document).on('click', '.js-nextBookmark', seekToNextBookmark);
+  $(document).on('click', '.js-playPause', playPause);
 
   // Load the interview specified in the hash
   // @todo make time linkable when seek works
@@ -84,6 +86,11 @@ function init() {
 function play() {
   paused = false;
   raf(loop);
+
+  // Play all audio and video
+  setMediaPauseState();
+
+  els.playPauseButtonIcon.className = 'icon-pause';
 }
 
 function pause() {
@@ -94,6 +101,17 @@ function pause() {
 
   // Pause event playback
   paused = true;
+
+  els.playPauseButtonIcon.className = 'icon-play';
+}
+
+function playPause() {
+  if (paused) {
+    play()
+  }
+  else {
+    pause();
+  }
 }
 
 function load(interviewNameToLoad) {
@@ -285,9 +303,8 @@ function loop(time) {
     else {
       pause();
     }
+    raf(loop);
   }
-
-  raf(loop);
 }
 
 function seekToPrevBookmark() {
@@ -588,18 +605,12 @@ function eachMedia(cb) {
   return success;
 }
 
-function seekTo(time) {
-  time = parseInt(time);
-  currentTime = time;
-
-  // Unpause
-  paused = false;
-
+function setMediaPauseState() {
   // Seek or hide media
   var newVideoCount = 0;
   eachMedia(function(el) {
     // If the video should be playing
-    var newTime = (time - el._startTime)/1000;
+    var newTime = (currentTime - el._startTime)/1000;
     if (newTime > 0) {
       // Set its current time
       // console.log('Setting media time to ', newTime);
@@ -617,6 +628,18 @@ function seekTo(time) {
       el.style.display = 'none';
     }
   });
+
+  return newVideoCount;
+}
+
+function seekTo(time) {
+  time = parseInt(time);
+  currentTime = time;
+
+  // Unpause
+  paused = false;
+
+  var newVideoCount = setMediaPauseState();
 
   // Set the video count for nice presentation
   setVideoCount(newVideoCount);
