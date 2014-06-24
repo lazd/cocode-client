@@ -42,6 +42,10 @@ function init() {
   var videoRecorder = null;
   var audioRecorder = null;
 
+  // Whether the keyframe needs to be sent next tick
+  var keyframeChangedSinceLastReport = true;
+  var currentKeyframe = null;
+
   // The current question object and index
   var currentQuestion = null;
   var currentQuestionIndex = 0;
@@ -107,6 +111,19 @@ function init() {
 
   // Track initial question so it is shown correctly during replay
   trackSelfShowQuestion();
+
+  /**
+    Keyframes
+  */
+
+  storeKeyframe();
+  setInterval(function() {
+    if (keyframeChangedSinceLastReport) {
+      console.log('Storing keyframe')
+      track('keyframe', currentKeyframe);
+      keyframeChangedSinceLastReport = false;
+    }
+  }, 1000);
 
   /**
     Communication listeners
@@ -317,6 +334,7 @@ function init() {
     if (currentQuestion.code !== false) {
       currentQuestion.code = editor.getValue();
       setRunButtonStatus();
+      storeKeyframe();
     }
   });
 
@@ -538,6 +556,8 @@ function init() {
       user: user,
       language: language
     });
+
+    storeKeyframe();
   }
 
   function storeAudioTrack(url, peer) {
@@ -754,6 +774,14 @@ function init() {
     });
   }
 
+  function storeKeyframe() {
+    keyframeChangedSinceLastReport = true;
+    currentKeyframe = {
+      question: currentQuestion,
+      questionIndex: currentQuestionIndex
+    };
+  }
+
   function showQuestion(questionIndex, noTrigger) {
     els.$footerButtons[isInterviewer ? 'show' : 'hide']();
 
@@ -794,6 +822,8 @@ function init() {
       if (!noTrigger) {
         broadcastQuestions();
       }
+
+      storeKeyframe();
     }
   }
 }

@@ -268,17 +268,29 @@ function setEventIndex(time) {
   // Clear editor
   editor.setValue('');
 
-  // Replay events
+  // Find the last keyframe
+  var lastKeyFrame = interview.log[0];
+  var lastKeyFrameIndex = 0;
   for (var i = 0; i < interview.log.length; i++) {
-    if (interview.log[i].time > time) {
-      i--;
+    var event = interview.log[i];
+
+    // We found the last event, stop
+    if (event.time > time) {
       break;
     }
 
-    handleEvent(interview.log[i], i);
+    // This keyframe happened before the desired time
+    if (event.event === 'keyframe') {
+      lastKeyFrame = event;
+      lastKeyFrameIndex = i;
+    }
   }
 
-  eventIndex = 1;
+  // Start replying events after this keyframe
+  eventIndex = lastKeyFrameIndex;
+
+  // Don't set the time to keyframe time; there are no events to worry about between then and now
+  // currentTime = lastKeyFrame.time;
 }
 
 function handleEvent(event, index) {
@@ -290,6 +302,10 @@ function handleEvent(event, index) {
 
   if (name === 'showQuestion') {
     handleShowQuestion(data.questionIndex, data.question);
+  }
+  else if (name === 'keyframe') {
+    handleShowQuestion(data.questionIndex, data.question);
+    // @todo show/hide video here?
   }
   else if (name === 'editor.selection') {
     handleEditorSelections(data.selections);
@@ -309,6 +325,10 @@ function handleEvent(event, index) {
   else if (name === 'audio.started') {
     handleAudioStarted(index);
   }
+  else if (name === 'video.ended') {
+    // @todo hide video
+    setVideoCount(--videoCount);
+  }
 }
 
 function showSpeaking(el, volume) {
@@ -321,8 +341,8 @@ function hideSpeaking(el, volume) {
   el.style.display = 'none';
 }
 
-function setVideoCount(change) {
-  videoCount += change;
+function setVideoCount(count) {
+  videoCount = count;
 
   els.videoPanel.className = els.videoPanel.className.replace(/cc-VideoPanel--\d+/g, '');
   els.videoPanel.classList.add('cc-VideoPanel--'+videoCount);
@@ -330,7 +350,7 @@ function setVideoCount(change) {
 
 function handleVideoStarted(index) {
   // Update video count
-  setVideoCount(+1);
+  setVideoCount(++videoCount);
 
   var video = preloadedTracks[index];
   video.style.display = '';
@@ -483,29 +503,33 @@ function seekTo(time) {
   paused = false;
 
   // Seek or hide media
+  var newVideoCount = 0;
   eachMedia(function(el) {
     // If the video should be playing
     var newTime = (time - el._startTime)/1000;
     if (newTime > 0) {
       // Set its current time
-      console.log('Setting media time to ', newTime);
+      // console.log('Setting media time to ', newTime);
       el.play();
       el.currentTime = newTime;
       el.style.display = '';
+      if (el.tagName === 'VIDEO') {
+        newVideoCount++;
+      }
     }
     else {
-      console.log('Stopping media ', newTime);
+      // console.log('Stopping media ', newTime);
       el.currentTime = 0;
       el.pause();
       el.style.display = 'none';
     }
   });
 
+  // Set the video count for nice presentation
+  setVideoCount(newVideoCount);
+
   // Replay all events
   setEventIndex(time);
-
-  // @todo
-  // setVideoCount();
 }
 
 $(init);
