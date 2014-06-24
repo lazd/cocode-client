@@ -98,6 +98,9 @@ function init() {
   // Start the interview
   showQuestion(0, true);
 
+  // Track it so the initial question is shown correctly during replay
+  trackSelfShowQuestion();
+
   // When it's ready, join if we got a room from the URL
   webrtc.on('readyToCall', function() {
     // You can name it anything
@@ -207,6 +210,10 @@ function init() {
         downloadVideo(url, ourUser);
       });
     }
+
+    // Free up some memory by removing references to URLs
+    audioURLs = {};
+    videoURLs = {};
   };
 
   function sanitizeFilename(id) {
@@ -429,7 +436,8 @@ function init() {
 
         track('showQuestion', {
           user: peer.user,
-          question: currentQuestion
+          question: currentQuestion,
+          questionIndex: currentQuestionIndex
         });
       }
     }
@@ -453,8 +461,8 @@ function init() {
 
   $(document.body).on('click', '.js-saveBookmark', function() {
     var data = {
-      question: currentQuestionIndex,
-      code: currentQuestion.code,
+      question: currentTarget,
+      questionIndex: currentQuestionIndex,
       user: ourUser
     };
 
@@ -652,7 +660,8 @@ function init() {
     }
 
     track('codeExecuted', {
-      question: currentQuestionIndex,
+      question: currentQuestion,
+      questionIndex: currentQuestionIndex,
       output: console.output,
       results: results,
       user: ourUser
@@ -698,8 +707,8 @@ function init() {
   function trackSelfShowQuestion() {
     track('showQuestion', {
       user: ourUser,
-      questionIndex: currentQuestionIndex,
-      question: currentQuestion
+      question: currentQuestion,
+      questionIndex: currentQuestionIndex
     });
   }
 
