@@ -359,7 +359,7 @@ function init() {
 
   $(document.body).on('click', '.js-saveBookmark', function() {
     var data = {
-      question: currentTarget,
+      question: currentQuestion,
       questionIndex: currentQuestionIndex,
       user: ourUser
     };

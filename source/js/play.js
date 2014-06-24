@@ -18,11 +18,17 @@ var marks = [];
 var videoEls = [];
 var audioEls = [];
 
+// A set of preloaded audio/video elements corresponding to the event index
+var preloadedTracks = {};
+
 // ms the loop has been running
 var loopTime = 0;
 
 // The ms in loop time of the last reset
 var currentTime = 0;
+
+// The set of bookmarks
+var bookmarks = [];
 
 var interviewName;
 var els = {
@@ -33,8 +39,11 @@ var els = {
   runCodeButton: '.js-runCode',
   downloadButton: '#cc-DownloadButton',
   videoTime: '#cc-VideoTime',
-  videoTimeDisplay: '#cc-VideoTimeDisplay'
+  videoTimeDisplay: '#cc-VideoTimeDisplay',
+  prevBookmarkButton: '.js-prevBookmark',
+  nextBookmarkButton: '.js-nextBookmark'
 };
+
 var editor;
 
 function init() {
@@ -61,6 +70,9 @@ function init() {
     var time = els.videoTime.value;
     seekTo(time);
   });
+
+  $(document).on('click', '.js-prevBookmark', seekToPrevBookmark);
+  $(document).on('click', '.js-nextBookmark', seekToNextBookmark);
 
   // Load the interview specified in the hash
   // @todo make time linkable when seek works
@@ -104,6 +116,27 @@ function load(interviewNameToLoad) {
     marks.length = 0;
     eventIndex = 0;
 
+    // Store the set of bookmarks
+    bookmarks = interview.log.filter(function(event, index) {
+      // While we're looping over everyone, set the index on the object
+      event.index = index;
+
+      // Return only bookmarks
+      if (event.event === 'bookmark') {
+        return true;
+      }
+    });
+
+    if (bookmarks.length) {
+      els.$prevBookmarkButton.show();
+      els.$nextBookmarkButton.show();
+    }
+    else {
+      // Don't show buttons if there are no bookmarks
+      els.$prevBookmarkButton.hide();
+      els.$nextBookmarkButton.hide();
+    }
+
     preloadTracks(play);
   });
 
@@ -112,7 +145,22 @@ function load(interviewNameToLoad) {
   });
 }
 
-var preloadedTracks = {};
+function setBookmarkNavState() {
+  // Check if there is a bookmark before the current time and after the current time
+  var bookmarkBefore = false;
+  var bookmarkAfter = false;
+  bookmarks.forEach(function(bookmark) {
+    if (bookmark.time < currentTime) {
+      bookmarkBefore = true;
+    }
+    else if (bookmark.time > currentTime) {
+      bookmarkAfter = true;
+    }
+  });
+
+  els.prevBookmarkButton.disabled = !bookmarkBefore;
+  els.nextBookmarkButton.disabled = !bookmarkAfter;
+}
 
 function preloadVideo(url, index) {
   // Create video tag
@@ -215,6 +263,9 @@ function loop(time) {
     var nextEvent = interview.log[eventIndex];
 
     if (nextEvent) {
+      // Only bother setting the state of the bookmark buttons if there is another event
+      setBookmarkNavState();
+
       if (currentTime >= nextEvent.time) {
         handleEvent(nextEvent, eventIndex);
         eventIndex++;
@@ -226,6 +277,37 @@ function loop(time) {
   }
 
   raf(loop);
+}
+
+function seekToPrevBookmark() {
+  var prevBookmark = null;
+  bookmarks.some(function(bookmark) {
+    // Give a second buffer so it's possible to go back
+    if (bookmark.time < currentTime - 1000) {
+      prevBookmark = bookmark;
+    }
+    else if (bookmark.time > currentTime) {
+      return true;
+    }
+  });
+
+  if (prevBookmark) {
+    seekTo(prevBookmark.time);
+  }
+}
+
+function seekToNextBookmark() {
+  var nextBookmark = null;
+  bookmarks.some(function(bookmark) {
+    if (bookmark.time > currentTime) {
+      nextBookmark = bookmark;
+      return true;
+    }
+  });
+
+  if (nextBookmark) {
+    seekTo(nextBookmark.time);
+  }
 }
 
 function zeroPad(num, spaces) {
