@@ -97,7 +97,7 @@ function stringify(obj) {\n\
     code: '/**\n\
   Search in a sorted array\n\
 \n\
-  * Given an array, reverse it in place. Don\t use the built in Array.reverse().\n\
+  * Given an array, reverse it in place. Don\'t use the built in Array.reverse().\n\
 */\n\
 \n\
 function reverse(arr) {\n\
