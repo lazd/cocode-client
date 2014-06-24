@@ -11,6 +11,7 @@
 .cc-TimelineContainer-marker {
 	position: absolute;
 	bottom: 0;
+	z-index: 0; /* Be below everything */
 	width: 16px;
 	height: 16px;
 	margin-left: -8px;
@@ -61,10 +62,11 @@
 
 .cc-TimelineContainer-sliderContainer {
 	position: absolute;
+	top: 0;
 	bottom: 0;
 	width: 100%;
+	z-index: 1; /* Be above markers */
 
-	top: 0;
 	bottom: 13px; /* Just above bookmark buttons */
 }
 
@@ -73,6 +75,6 @@
 	top: 0;
 	left: 0;
 	right: 0;
-	z-index: 1; /* Be above the sliderContainer */
+	z-index: 2; /* Be above the sliderContainer */
 	text-align: center;
 }
