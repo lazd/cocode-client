@@ -103,7 +103,6 @@ function load(interviewNameToLoad) {
   });
 }
 
-var hasSeeked = false;
 function loop(time) {
   if (!running) {
     return;
@@ -119,12 +118,6 @@ function loop(time) {
     if (time >= nextEvent.time) {
       handleEvent(nextEvent);
       eventIndex++;
-    }
-
-    // Seek to sync things up initially
-    if (!hasSeeked) {
-      // @todo: this doesn't seem to help
-      // hasSeeked = seekTo(time);
     }
   }
   else {
