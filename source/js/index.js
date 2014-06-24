@@ -98,7 +98,9 @@ function init() {
   // Start the interview
   showQuestion(0, true);
 
-  // Track it so the initial question is shown correctly during replay
+  track('sessionStarted');
+
+  // Track initial question so it is shown correctly during replay
   trackSelfShowQuestion();
 
   // When it's ready, join if we got a room from the URL
@@ -135,19 +137,19 @@ function init() {
       peer.videoRecorder = RecordRTC(peer.stream, recorderOptions);
       peer.videoRecorder.startRecording();
       peer.videoRecorder.startTime = Date.now();
-
       track('video.started', {
         user: peer.user
       });
     }
     else {
       // Separate streams for Chrome
+      // Only record video, requiring the interviewer to leave their speakers on and let the interviewees audio come through loudly
       peer.videoRecorder = RecordRTC(peer.stream, recorderOptions);
       peer.videoRecorder.startRecording();
+      peer.videoRecorder.startTime = Date.now();
       track('video.started', {
         user: peer.user
       });
-      peer.videoRecorder.startTime = Date.now();
 
       /*
       peer.audioRecorder = RecordRTC(peer.stream);
@@ -200,7 +202,6 @@ function init() {
       audioRecorder.stopRecording(function(url) {
         downloadAudio(url, ourUser);
       });
-
     }
     if (videoRecorder) {
       track('video.stopped', {
@@ -248,6 +249,8 @@ function init() {
   }
 
   function downloadSession(event) {
+    track('sessionEnded');
+
     var session = {
       log: log,
       questions: questions,
@@ -283,6 +286,9 @@ function init() {
       }
       else {
         // Separate streams for Chrome
+        /*
+        // Technique from: https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC#how-to-fix-audiovideo-sync-issues-on-chrome
+        // Causing a delay where video lags
         audioRecorder = RecordRTC(stream, {
           onAudioProcessStarted: function( ) {
             videoRecorder.startRecording();
@@ -296,6 +302,23 @@ function init() {
 
         audioRecorder.startRecording();
         audioRecorder.startTime = videoRecorder.startTime = Date.now();
+        track('audio.started', {
+          user: ourUser
+        });
+        */
+
+        // Start at the same time
+        // No delay, Chrome 35 on Mac OS X
+        videoRecorder = RecordRTC(stream, recorderOptions);
+        videoRecorder.startRecording();
+        videoRecorder.startTime = Date.now();
+        track('video.started', {
+          user: ourUser
+        });
+
+        audioRecorder = RecordRTC(stream);
+        audioRecorder.startRecording();
+        audioRecorder.startTime = Date.now();
         track('audio.started', {
           user: ourUser
         });

@@ -123,7 +123,8 @@ function loop(time) {
 
     // Seek to sync things up initially
     if (!hasSeeked) {
-      hasSeeked = seekTo(time);
+      // @todo: this doesn't seem to help
+      // hasSeeked = seekTo(time);
     }
   }
   else {
