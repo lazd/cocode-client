@@ -9,6 +9,8 @@ require('codemirror/mode/clike/clike');
 require('codemirror/mode/ruby/ruby');
 require('codemirror/mode/python/python');
 
+var session = null;
+var part = null;
 var paused = true;
 var interview = null;
 var eventIndex = 0;
@@ -79,9 +81,20 @@ function init() {
   $(document).on('click', '.js-nextBookmark', seekToNextBookmark);
   $(document).on('click', '.js-playPause', playPause);
 
+  // No part by default
+  part = '';
+
+  // Get session/part from hash
+  var hash = window.location.hash.slice(1);
+  var hashParts = hash.split('.');
+  if (hashParts.length > 1) {
+    part = '.'+hashParts[1];
+  }
+  session = hashParts[0];
+
   // Load the interview specified in the hash
   // @todo make time linkable when seek works
-  load(window.location.hash.slice(1));
+  load(session);
 
   raf(loop);
 }
@@ -121,7 +134,7 @@ function load(interviewNameToLoad) {
   interviewName = interviewNameToLoad;
 
   // Load JSON
-  var request = $.ajax('results/'+interviewName+'/interview.json');
+  var request = $.ajax('results/'+interviewName+'/interview'+part+'.json');
 
   request.done(function(interviewData) {
     interview = interviewData;
@@ -262,10 +275,10 @@ function preloadTracks(cb) {
     var user = event.user;
     var track = null;
     if (eventName === 'video.started') {
-      track = preloadVideo('results/'+interviewName+'/'+user+'.video.webm', i);
+      track = preloadVideo('results/'+interviewName+'/'+user+part+'.video.webm', i);
     }
     else if (eventName === 'audio.started') {
-      track = preloadAudio('results/'+interviewName+'/'+user+'.audio.wav', i);
+      track = preloadAudio('results/'+interviewName+'/'+user+part+'.audio.wav', i);
     }
 
     if (track) {

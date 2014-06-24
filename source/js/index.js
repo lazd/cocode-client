@@ -34,9 +34,8 @@ function init() {
   // The name of the user
   var ourUser = 'unnamed';
 
-  // A list of recorders
-  var audioURLs = [];
-  var videoURLs = [];
+  // A list of recorded URLs
+  var trackURLs = [];
 
   // Recorders for ourself
   var videoRecorder = null;
@@ -62,7 +61,8 @@ function init() {
     runCodeButton: '.js-runCode',
     downloadButton: '#cc-DownloadButton',
     footer: '#cc-Footer',
-    footerButtons: '.js-footerButtons'
+    footerButtons: '.js-footerButtons',
+    downloadButton: '.js-downloadSession'
   };
 
   // Grab the room and user from the URL
@@ -164,10 +164,11 @@ function init() {
     if (isInterviewer) {
       if (isFirefox) {
         videoRecorder = RecordRTC(stream, videoRecorderOptions);
+        videoRecorder.part = 0;
         videoRecorder.startRecording();
-        videoRecorder.startTime = Date.now();
         track('video.started', {
-          user: ourUser
+          user: ourUser,
+          part: ++videoRecorder.part
         });
       }
       else {
@@ -179,34 +180,39 @@ function init() {
           onAudioProcessStarted: function( ) {
             videoRecorder.startRecording();
             track('video.started', {
-              user: ourUser
+              user: ourUser,
+              part: ++videoRecorder.part
             });
           }
         });
+        audioRecorder.part = 0;
 
         videoRecorder = RecordRTC(stream, videoRecorderOptions);
+        videoRecorder.part = 0;
 
         audioRecorder.startRecording();
-        audioRecorder.startTime = videoRecorder.startTime = Date.now();
         track('audio.started', {
-          user: ourUser
+          user: ourUser,
+          part: ++audioRecorder.part
         });
         */
 
         // Start at the same time
         // No delay, Chrome 35 on Mac OS X
         videoRecorder = RecordRTC(stream, videoRecorderOptions);
+        videoRecorder.part = 0;
         videoRecorder.startRecording();
-        videoRecorder.startTime = Date.now();
         track('video.started', {
-          user: ourUser
+          user: ourUser,
+          part: ++videoRecorder.part
         });
 
         audioRecorder = RecordRTC(stream, audioRecorderOptions);
+        audioRecorder.part = 0;
         audioRecorder.startRecording();
-        audioRecorder.startTime = Date.now();
         track('audio.started', {
-          user: ourUser
+          user: ourUser,
+          part: ++audioRecorder.part
         });
       }
     }
@@ -257,7 +263,7 @@ function init() {
         user: peer.user
       });
       peer.audioRecorder.stopRecording(function(url) {
-        storeAudioTrack(url, peer);
+        storeTrack('audio', url, peer.user+'.'+peer.audioRecorder.part);
       });
     }
     if (peer.videoRecorder) {
@@ -265,7 +271,7 @@ function init() {
         user: peer.user
       });
       peer.videoRecorder.stopRecording(function(url) {
-        storeVideoTrack(url, peer);
+        storeTrack('video', url, peer.user+'.'+peer.videoRecorder.part);
       });
     }
 
@@ -410,20 +416,22 @@ function init() {
 
     if (isFirefox) {
       peer.videoRecorder = RecordRTC(peer.stream, videoRecorderOptions);
+      peer.videoRecorder.part = 0;
       peer.videoRecorder.startRecording();
-      peer.videoRecorder.startTime = Date.now();
       track('video.started', {
-        user: peer.user
+        user: peer.user,
+        part: ++peer.videoRecorder.part
       });
     }
     else {
       // Separate streams for Chrome
       // Only record video, requiring the interviewer to leave their speakers on and let the interviewees audio come through loudly
       peer.videoRecorder = RecordRTC(peer.stream, videoRecorderOptions);
+      peer.videoRecorder.part = 0;
       peer.videoRecorder.startRecording();
-      peer.videoRecorder.startTime = Date.now();
       track('video.started', {
-        user: peer.user
+        user: peer.user,
+        part: ++peer.videoRecorder.part
       });
 
       /*
@@ -432,12 +440,70 @@ function init() {
       track('audio.started', {
         user: peer.user
       });
-      peer.audioRecorder.startTime = Date.now();
       */
     }
   }
 
-  function downloadRecordings() {
+  function downloadAndResume() {
+    downloadRecordings(restartRecordings);
+  }
+
+  function restartRecordings() {
+    // Start peer recording
+    webrtc.webrtc.peers.forEach(function(peer) {
+      if (peer.audioRecorder) {
+        track('audio.started', {
+          user: peer.user,
+          part: ++peer.audioRecorder.part
+        });
+
+        peer.audioRecorder.startRecording();
+      }
+
+      if (peer.videoRecorder) {
+        track('video.started', {
+          user: peer.user,
+          part: ++peer.videoRecorder.part
+        });
+
+        peer.videoRecorder.startRecording();
+      }
+    });
+
+    // Start our recording
+    if (audioRecorder) {
+      track('audio.started', {
+        user: ourUser,
+        part: ++audioRecorder.part
+      });
+
+      audioRecorder.startRecording();
+    }
+
+    if (videoRecorder) {
+      track('video.started', {
+        user: ourUser,
+        part: ++videoRecorder.part
+      });
+
+      videoRecorder.startRecording();
+    }
+  }
+
+  function downloadRecordings(cb) {
+    var toDownload = 0;
+    var allDownloadsStarted = false;
+
+    function handleDownloadComplete() {
+      toDownload--;
+      if (toDownload === 0 && allDownloadsStarted) {
+        if (typeof cb === 'function') {
+          console.error('Downloads complete');
+          cb();
+        }
+      }
+    }
+
     // Iterate over each peer
     webrtc.webrtc.peers.forEach(function(peer) {
       // Download their audio and video
@@ -445,52 +511,77 @@ function init() {
         track('audio.stopped', {
           user: peer.user
         });
+
+        toDownload++;
         peer.audioRecorder.stopRecording(function(url) {
-          downloadAudio(url, peer.user || peer.id);
+          downloadAudio(url, peer.user+'.'+peer.audioRecorder.part);
+          handleDownloadComplete();
         });
       }
       if (peer.videoRecorder) {
         track('video.stopped', {
           user: peer.user
         });
+
+        toDownload++;
         peer.videoRecorder.stopRecording(function(url) {
-          downloadVideo(url, peer.user || peer.id);
+          downloadVideo(url, peer.user+'.'+peer.videoRecorder.part);
+          handleDownloadComplete();
         });
       }
     });
-
-    // Download previously stopped audio streams
-    for (var peerLabel in audioURLs) {
-      downloadAudio(audioURLs[peerLabel], peerLabel);
-    }
-
-    // Download previously stopped video streams
-    for (var peerLabel in videoURLs) {
-      downloadVideo(videoURLs[peerLabel], peerLabel);
-    }
 
     // Download our audio and video
     if (audioRecorder) {
       track('audio.stopped', {
         user: ourUser
       });
+
+      toDownload++;
       audioRecorder.stopRecording(function(url) {
-        downloadAudio(url, ourUser);
+        downloadAudio(url, ourUser+'.'+audioRecorder.part);
+        handleDownloadComplete();
       });
     }
+
     if (videoRecorder) {
       track('video.stopped', {
         user: ourUser
       });
+
+      toDownload++;
       videoRecorder.stopRecording(function(url) {
-        downloadVideo(url, ourUser);
+        downloadVideo(url, ourUser+'.'+videoRecorder.part);
+        handleDownloadComplete();
       });
     }
 
-    // Free up some memory by removing references to URLs
-    audioURLs = {};
-    videoURLs = {};
-  };
+    allDownloadsStarted = true;
+
+    // Download saved tracks
+    if (trackURLs.length) {
+      toDownload += trackURLs.length
+
+      // Download all saved tracks
+      trackURLs.forEach(downloadTrack);
+      handleDownloadComplete();
+
+      // Free up some memory by removing references to URLs
+      trackURLs = [];
+    }
+  }
+
+  function downloadTrack(track) {
+    if (track.type === 'audio') {
+      downloadAudio(track.url, track.name);
+    }
+    else if (track.type === 'video') {
+      downloadVideo(track.url, track.name);
+    }
+    else {
+      throw new Error('Unsupported media type: '+track.type)
+    }
+  }
 
   function sanitizeFilename(id) {
     return id.replace(/[^a-zA-Z0-9]+/g, '');
@@ -523,7 +614,16 @@ function init() {
     downloadURL(url, name+'.audio.wav');
   }
 
-  function downloadSession(event) {
+  function dataURItoBlob(dataURI, type) {
+    var array = [];
+    for(var i = 0; i < dataURI.length; i++) {
+      array.push(dataURI.charCodeAt(i));
+    }
+    return new Blob([new Uint8Array(array)], { type: type });
+  }
+
+  var part = 0;
+  function downloadSession() {
     track('sessionEnded');
 
     var session = {
@@ -533,13 +633,30 @@ function init() {
       duration: getTime()
     };
 
-    var data = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(session));
-
-    // Download the session JSON
-    downloadURL('data:'+data, room+'.session.json');
-
     // Download the recordings
-    downloadRecordings();
+    downloadRecordings(function() {
+      // Download the interview log last as video.stopped events will need to be captures
+      // This is to work around a Chrome issue where the download name is not supported
+      // Create a blob from the session
+      var blob = new Blob(JSON.stringify(session).split(''));
+
+      // Convert the blob to an object URL
+      var objectURL = URL.createObjectURL(blob);
+
+      // Download the session JSON
+      downloadURL(objectURL, 'interview.'+(++part)+'.json');
+
+      // Reset log and start time
+      log = [];
+      startTime = Date.now();
+
+      // Track interview start again
+      track('sessionStarted');
+      trackSelfShowQuestion();
+
+      // Restart recordings
+      restartRecordings();
+    });
   }
 
   function setLanguage(language, user) {
@@ -560,12 +677,12 @@ function init() {
     storeKeyframe();
   }
 
-  function storeAudioTrack(url, peer) {
-    audioURLs[peer.user || peer.id] = url;
-  }
-
-  function storeVideoTrack(url, peer) {
-    videoURLs[peer.user || peer.id] = url;
+  function storeTrack(type, url, name) {
+    trackURLs.push({
+      type: type,
+      url: url,
+      name: name
+    });
   }
 
   function setRunButtonStatus() {
