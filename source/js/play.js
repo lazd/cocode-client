@@ -95,12 +95,75 @@ function load(interviewNameToLoad) {
     videoCount = 0;
     marks.length = 0;
     eventIndex = 0;
+
+    preloadTracks();
     play();
   });
 
   request.fail(function(jqXHR, textStatus) {
     alert('Failed to load interview:'+textStatus);
   });
+}
+
+var preloadedTracks = {};
+
+function preloadVideo(url, index) {
+  // Create video tag
+  var video = document.createElement('video');
+
+  // @todo use unique interview.name
+  video.src = url;
+  video.autoplay = false;
+  video.preload = 'auto';
+
+  var d = document.createElement('div');
+  d.className = 'cc-Video cc-Video--canEnlarge';
+  d.appendChild(video);
+
+  // @todo track hark events
+  /*
+  var vol = document.createElement('div');
+  vol.id = 'volume_' + user;
+  vol.className = 'cc-Video-speaking cc-Icon icon-speaker-active';
+  d.appendChild(vol);
+  */
+
+  // Click to enlarge video
+  var fullSize = false;
+  video.onclick = function() {
+    d.classList[fullSize ? 'remove' : 'add']('cc-Video--fullSize');
+    fullSize = !fullSize;
+  };
+
+  els.videoPanel.appendChild(d);
+
+  preloadedTracks[index] = video;
+  videoEls.push(video);
+}
+
+function preloadAudio(url, index) {
+  var audio = document.createElement('audio');
+  audio.src = url;
+  audio.preload = 'auto';
+  audio.autoplay = false;
+  els.audioPanel.appendChild(audio);
+
+  preloadedTracks[index] = audio;
+  audioEls.push(audio);
+}
+
+function preloadTracks() {
+  for (var i = 0; i < interview.log.length; i++) {
+    var event = interview.log[i];
+    var eventName = event.event;
+    var user = event.user;
+    if (eventName === 'video.started') {
+      preloadVideo('results/'+interviewName+'/'+user+'.video.webm', i);
+    }
+    else if (eventName === 'audio.started') {
+      preloadAudio('results/'+interviewName+'/'+user+'.audio.wav', i);
+    }
+  }
 }
 
 function loop(time) {
@@ -116,7 +179,7 @@ function loop(time) {
 
   if (nextEvent) {
     if (time >= nextEvent.time) {
-      handleEvent(nextEvent);
+      handleEvent(nextEvent, eventIndex);
       eventIndex++;
     }
   }
@@ -167,7 +230,7 @@ function setEventIndex(time) {
   }
 }
 
-function handleEvent(event) {
+function handleEvent(event, index) {
   var name = event.event;
   var data = event.data;
   var user = event.user;
@@ -190,10 +253,10 @@ function handleEvent(event) {
     handleLanguageChange(data.language);
   }
   else if (name === 'video.started') {
-    handleVideoStarted(user);
+    handleVideoStarted(index);
   }
   else if (name === 'audio.started') {
-    handleAudioStarted(user);
+    handleAudioStarted(index);
   }
 }
 
@@ -214,52 +277,15 @@ function setVideoCount(change) {
   els.videoPanel.classList.add('cc-VideoPanel--'+videoCount);
 }
 
-function handleVideoStarted(user) {
+function handleVideoStarted(index) {
   // Update video count
   setVideoCount(+1);
 
-  // Add video element
-  if (els.videoPanel) {
-    // Create video tag
-    var video = document.createElement('video');
-
-    // @todo use unique interview.name
-    video.src = 'results/'+interviewName+'/'+user+'.video.webm';
-    video.autoplay = true;
-
-    var d = document.createElement('div');
-    d.className = 'cc-Video cc-Video--canEnlarge';
-    d.id = 'container_' + user;
-    d.appendChild(video);
-
-    // @todo track hark events
-    /*
-    var vol = document.createElement('div');
-    vol.id = 'volume_' + user;
-    vol.className = 'cc-Video-speaking cc-Icon icon-speaker-active';
-    d.appendChild(vol);
-    */
-
-    // Click to enlarge video
-    var fullSize = false;
-    video.onclick = function() {
-      d.classList[fullSize ? 'remove' : 'add']('cc-Video--fullSize');
-      fullSize = !fullSize;
-    };
-
-    els.videoPanel.appendChild(d);
-
-    videoEls.push(video);
-  }
+  preloadedTracks[index].play();
 }
 
-function handleAudioStarted(user) {
-  var audio = document.createElement('audio');
-  audio.src = 'results/'+interviewName+'/'+user+'.audio.wav';
-  audio.autoplay = true;
-  els.audioPanel.appendChild(audio);
-
-  audioEls.push(audio);
+function handleAudioStarted(index) {
+  preloadedTracks[index].play();
 }
 
 function handleEditorRefresh(data) {
