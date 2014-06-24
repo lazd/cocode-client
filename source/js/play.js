@@ -40,8 +40,10 @@ var els = {
   downloadButton: '#cc-DownloadButton',
   videoTime: '#cc-VideoTime',
   videoTimeDisplay: '#cc-VideoTimeDisplay',
+  videoTotalTimeDisplay: '#cc-VideoTotalTimeDisplay',
   prevBookmarkButton: '.js-prevBookmark',
-  nextBookmarkButton: '.js-nextBookmark'
+  nextBookmarkButton: '.js-nextBookmark',
+  markerContainer: '#cc-BookmarkMarkerContainer'
 };
 
 var editor;
@@ -116,6 +118,9 @@ function load(interviewNameToLoad) {
     marks.length = 0;
     eventIndex = 0;
 
+    // Set total time display
+    els.videoTotalTimeDisplay.textContent = getPrettyTime(interview.duration);
+
     // Store the set of bookmarks
     bookmarks = interview.log.filter(function(event, index) {
       // While we're looping over everyone, set the index on the object
@@ -123,6 +128,12 @@ function load(interviewNameToLoad) {
 
       // Return only bookmarks
       if (event.event === 'bookmark') {
+        // Add a marker
+        var marker = document.createElement('div');
+        marker.className = 'cc-TimelineContainer-marker icon-bookmark';
+        marker.style.left = (event.time/interview.duration * 100) + '%';
+        els.markerContainer.appendChild(marker);
+
         return true;
       }
     });

@@ -1,7 +1,7 @@
 {
 	"metadata": {
 		"name": "CoCode",
-		"lastOpened": 1403499341580,
+		"lastOpened": 1403631350068,
 		"created": 1403316318503
 	},
 	"iconSets": [
@@ -1098,7 +1098,7 @@
 				},
 				{
 					"id": 261,
-					"order": 14,
+					"order": 0,
 					"prevSize": 32,
 					"code": 58893,
 					"name": "play",
@@ -1123,11 +1123,21 @@
 				},
 				{
 					"id": 266,
-					"order": 0
+					"order": 15,
+					"prevSize": 32,
+					"code": 58894,
+					"name": "play",
+					"tempChar": "",
+					"ligatures": ""
 				},
 				{
 					"id": 267,
-					"order": 0
+					"order": 14,
+					"prevSize": 32,
+					"code": 58895,
+					"name": "pause",
+					"tempChar": "",
+					"ligatures": ""
 				},
 				{
 					"id": 268,
@@ -1135,11 +1145,21 @@
 				},
 				{
 					"id": 269,
-					"order": 0
+					"order": 17,
+					"prevSize": 32,
+					"code": 58893,
+					"name": "backward",
+					"tempChar": "",
+					"ligatures": ""
 				},
 				{
 					"id": 270,
-					"order": 0
+					"order": 16,
+					"prevSize": 32,
+					"code": 58896,
+					"name": "forward",
+					"tempChar": "",
+					"ligatures": ""
 				},
 				{
 					"id": 271,
@@ -1167,7 +1187,7 @@
 					"prevSize": 32,
 					"code": 58888,
 					"name": "speaker-active",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1184,7 +1204,7 @@
 					"prevSize": 32,
 					"code": 58889,
 					"name": "speaker-inactive",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1233,7 +1253,7 @@
 					"prevSize": 32,
 					"code": 58890,
 					"name": "arrow-right",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1254,7 +1274,7 @@
 					"prevSize": 32,
 					"code": 58891,
 					"name": "arrow-left",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -8091,7 +8111,8 @@
 		},
 		"historySize": 100,
 		"showCodes": true,
-		"search": ""
+		"search": "",
+		"gridSize": 16
 	},
 	"externalSets": []
 }

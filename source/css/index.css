@@ -21,6 +21,7 @@
 @import 'Interview.css';
 @import 'Video.css';
 @import 'VideoPanel.css';
+@import 'TimelineContainer.css';
 
 .cc-JoinLink {
   position: relative;

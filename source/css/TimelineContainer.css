@@ -1,0 +1,78 @@
+:root {
+	--timeWidth: 75px;
+}
+
+.cc-TimelineContainer {
+	position: relative;
+
+	height: var(--headerHeight);
+}
+
+.cc-TimelineContainer-marker {
+	position: absolute;
+	bottom: 0;
+	width: 16px;
+	height: 16px;
+	margin-left: -8px;
+
+	color: var(--coTrainBlue-dark);
+	text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+%cc-TimelineContainer-timeDisplay {
+	box-sizing: border-box;
+	position: absolute;
+	bottom: 0;
+	width: var(--timeWidth);
+}
+
+.cc-TimelineContainer-currentTime {
+	inherit: %cc-TimelineContainer-timeDisplay;
+
+	left: 0;
+	padding-right: 10px;
+	text-align: right;
+}
+
+.cc-TimelineContainer-totalTime {
+	inherit: %cc-TimelineContainer-timeDisplay;
+
+	right: 0;
+	padding-left: 10px;
+	text-align: left;
+}
+
+%cc-TimelineArea {
+	position: absolute;
+	width: calc(100% - var(--timeWidth) * 2); /* Leave room on the sides */
+	left: var(--timeWidth);
+	right: var(--timeWidth);
+}
+
+.cc-BookmarkMarkerContainer {
+	inherit: %cc-TimelineArea;
+	bottom: 4px;
+}
+
+.cc-TimelineContainer-slider {
+	inherit: %cc-TimelineArea;
+	bottom: 0;
+}
+
+.cc-TimelineContainer-sliderContainer {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+
+	top: 0;
+	bottom: 13px; /* Just above bookmark buttons */
+}
+
+.cc-TimelineContainer-buttons {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 1; /* Be above the sliderContainer */
+	text-align: center;
+}

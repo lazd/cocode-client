@@ -1,10 +1,10 @@
 @font-face {
 	font-family: 'cocode';
-	src:url('fonts/cocode.eot?-mp3mvr');
-	src:url('fonts/cocode.eot?#iefix-mp3mvr') format('embedded-opentype'),
-		url('fonts/cocode.woff?-mp3mvr') format('woff'),
-		url('fonts/cocode.ttf?-mp3mvr') format('truetype'),
-		url('fonts/cocode.svg?-mp3mvr#cocode') format('svg');
+	src:url('fonts/cocode.eot?-3nl6gd');
+	src:url('fonts/cocode.eot?#iefix-3nl6gd') format('embedded-opentype'),
+		url('fonts/cocode.woff?-3nl6gd') format('woff'),
+		url('fonts/cocode.ttf?-3nl6gd') format('truetype'),
+		url('fonts/cocode.svg?-3nl6gd#cocode') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -51,7 +51,16 @@
 	content: "\e607";
 }
 .icon-play:before {
+	content: "\e60e";
+}
+.icon-pause:before {
+	content: "\e60f";
+}
+.icon-backward:before {
 	content: "\e60d";
+}
+.icon-forward:before {
+	content: "\e610";
 }
 .icon-speaker-active:before {
 	content: "\e608";

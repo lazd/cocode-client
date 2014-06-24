@@ -22,7 +22,6 @@
   font-weight: 700;
 }
 
-
 .cc-Header-h2 {
   margin: 0;
   font-size: 18px;
@@ -36,6 +35,10 @@
 .cc-Header-column {
   flex: 1;
   padding: 8px 16px;
+}
+
+.cc-Header-column--noPadding {
+  padding: 0;
 }
 
 .cc-Header-column--wide {
