@@ -313,8 +313,11 @@ function init() {
 
   // Save code changes to the question so it shows when revisited
   editor.on('change', function(i, op) {
-    currentQuestion.code = editor.getValue();
-    setRunButtonStatus();
+    // Don't store editor contents in questions that don't have code
+    if (currentQuestion.code !== false) {
+      currentQuestion.code = editor.getValue();
+      setRunButtonStatus();
+    }
   });
 
   /**
