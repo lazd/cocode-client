@@ -85,10 +85,11 @@ function init() {
 
 function play() {
   paused = false;
-  raf(loop);
 
   // Play all audio and video
   setMediaPauseState();
+
+  raf(loop);
 
   els.playPauseButtonIcon.className = 'icon-pause';
 }
@@ -300,7 +301,9 @@ function loop(time) {
         eventIndex++;
       }
     }
-    else {
+
+    if (currentTime > interview.duration) {
+      // Pause the interview when it's over
       pause();
     }
     raf(loop);
