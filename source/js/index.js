@@ -139,22 +139,21 @@ function init() {
     }
     else {
       // Separate streams for Chrome
-      peer.audioRecorder = RecordRTC(peer.stream, {
-        onAudioProcessStarted: function() {
-          peer.videoRecorder.startRecording();
-          track('video.started', {
-            user: peer.user
-          });
-        }
-      });
-
       peer.videoRecorder = RecordRTC(peer.stream, recorderOptions);
+      peer.videoRecorder.startRecording();
+      track('video.started', {
+        user: peer.user
+      });
+      peer.videoRecorder.startTime = Date.now();
 
+      /*
+      peer.audioRecorder = RecordRTC(peer.stream);
       peer.audioRecorder.startRecording();
       track('audio.started', {
         user: peer.user
       });
-      peer.audioRecorder.startTime = peer.videoRecorder.startTime = Date.now();
+      peer.audioRecorder.startTime = Date.now();
+      */
     }
   }
 
