@@ -96,8 +96,7 @@ function load(interviewNameToLoad) {
     marks.length = 0;
     eventIndex = 0;
 
-    preloadTracks();
-    play();
+    preloadTracks(play);
   });
 
   request.fail(function(jqXHR, textStatus) {
@@ -137,8 +136,13 @@ function preloadVideo(url, index) {
 
   els.videoPanel.appendChild(d);
 
+  // Hide until played
+  video.style.display = 'none';
+
   preloadedTracks[index] = video;
   videoEls.push(video);
+
+  return video;
 }
 
 function preloadAudio(url, index) {
@@ -150,18 +154,34 @@ function preloadAudio(url, index) {
 
   preloadedTracks[index] = audio;
   audioEls.push(audio);
+
+  return audio;
 }
 
-function preloadTracks() {
+function preloadTracks(cb) {
+  var toLoad = 0;
+  function handleCanPlay() {
+    toLoad--;
+    if (toLoad === 0 && typeof cb === 'function') {
+      console.log('Preload complete!');
+      cb();
+    }
+  }
   for (var i = 0; i < interview.log.length; i++) {
     var event = interview.log[i];
     var eventName = event.event;
     var user = event.user;
+    var track = null;
     if (eventName === 'video.started') {
-      preloadVideo('results/'+interviewName+'/'+user+'.video.webm', i);
+      track = preloadVideo('results/'+interviewName+'/'+user+'.video.webm', i);
     }
     else if (eventName === 'audio.started') {
-      preloadAudio('results/'+interviewName+'/'+user+'.audio.wav', i);
+      track = preloadAudio('results/'+interviewName+'/'+user+'.audio.wav', i);
+    }
+
+    if (track) {
+      track.addEventListener('canplay', handleCanPlay);
+      toLoad++;
     }
   }
 }
@@ -281,7 +301,9 @@ function handleVideoStarted(index) {
   // Update video count
   setVideoCount(+1);
 
-  preloadedTracks[index].play();
+  var video = preloadedTracks[index];
+  video.style.display = '';
+  video.play();
 }
 
 function handleAudioStarted(index) {
