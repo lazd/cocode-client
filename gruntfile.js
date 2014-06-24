@@ -5,6 +5,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-symlink');
 
   var reworkPlugins = [
     require('rework-import')({
@@ -36,7 +37,10 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     clean: {
       // Clean files in build/, but leave the folder intact
-      build: 'build/**/*'
+      build: [
+        'build/**/*',
+        '!build/results/**'
+      ]
     },
     browserify: {
       options: {},
@@ -89,16 +93,16 @@ module.exports = function(grunt) {
         }
       }
     },
+    symlink: {
+      results: {
+        src: '../results',
+        dest: 'build/results/'
+      }
+    },
     copy: {
       resources: {
         cwd: 'source/',
         src: resourcesFiles,
-        dest: 'build/',
-        expand: true
-      },
-      results: {
-        cwd: 'source/',
-        src: 'results/**',
         dest: 'build/',
         expand: true
       },
@@ -131,7 +135,7 @@ module.exports = function(grunt) {
   });
 
   // Common tasks for all build types
-  grunt.registerTask('build-common', ['clean', 'copy']);
+  grunt.registerTask('build-common', ['clean', 'copy', 'symlink']);
 
   // Tasks to run before a dev build
   grunt.registerTask('build-dev-before', ['build-common', 'rework:dev']);
