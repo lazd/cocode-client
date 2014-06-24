@@ -1171,11 +1171,21 @@
 				},
 				{
 					"id": 273,
-					"order": 0
+					"order": 21,
+					"prevSize": 32,
+					"code": 58897,
+					"name": "previous",
+					"tempChar": "",
+					"ligatures": ""
 				},
 				{
 					"id": 274,
-					"order": 0
+					"order": 20,
+					"prevSize": 32,
+					"code": 58898,
+					"name": "next",
+					"tempChar": "",
+					"ligatures": ""
 				},
 				{
 					"id": 275,
@@ -1187,7 +1197,7 @@
 					"prevSize": 32,
 					"code": 58888,
 					"name": "speaker-active",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1204,7 +1214,7 @@
 					"prevSize": 32,
 					"code": 58889,
 					"name": "speaker-inactive",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1253,7 +1263,7 @@
 					"prevSize": 32,
 					"code": 58890,
 					"name": "arrow-right",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1274,7 +1284,7 @@
 					"prevSize": 32,
 					"code": 58891,
 					"name": "arrow-left",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{

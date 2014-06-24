@@ -642,20 +642,21 @@ function init() {
       duration: getTime()
     };
 
+    // Download the interview log first, ignoring any video.stopped events
+    // This is to work around a Chrome issue where the download name is not supported
+    // Create a blob from the session
+    var blob = new Blob(JSON.stringify(session).split(''));
+
+    // Convert the blob to an object URL
+    var objectURL = URL.createObjectURL(blob);
+
+    // Download the session JSON
+    downloadURL(objectURL, 'interview.'+(++part)+'.json');
+
     // Download the recordings
     downloadRecordings(function() {
-      // Download the interview log last as video.stopped events will need to be captures
-      // This is to work around a Chrome issue where the download name is not supported
-      // Create a blob from the session
-      var blob = new Blob(JSON.stringify(session).split(''));
-
-      // Convert the blob to an object URL
-      var objectURL = URL.createObjectURL(blob);
-
-      // Download the session JSON
-      downloadURL(objectURL, 'interview.'+(++part)+'.json');
-
       // Reset log and start time
+      // This will drop the video.stop events from the next log
       log = [];
       startTime = Date.now();
 

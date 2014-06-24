@@ -47,7 +47,9 @@ var els = {
   nextBookmarkButton: '.js-nextBookmark',
   markerContainer: '#cc-BookmarkMarkerContainer',
   playPauseButton: '.js-playPause',
-  playPauseButtonIcon: '.js-playPause > i'
+  playPauseButtonIcon: '.js-playPause > i',
+  prevPartButton: '.js-prevPart',
+  nextPartButton: '.js-nextPart'
 };
 
 var editor;
@@ -101,8 +103,10 @@ function init() {
   }
 
   var descriptionParts = resourceDescription.split('.');
+  var partNumber = -1;
   if (descriptionParts.length > 1) {
     part = '.'+descriptionParts[1];
+    partNumber = parseInt(descriptionParts[1]);
   }
   session = descriptionParts[0];
 
@@ -111,6 +115,42 @@ function init() {
   load(session);
 
   raf(loop);
+
+  if (partNumber) {
+    var nextPartNumber = partNumber + 1;
+    var prevPartNumber = partNumber - 1;
+    // See if there is a next part
+    var request = $.ajax('results/'+interviewName+'/interview.'+nextPartNumber+'.json');
+    request.done(function(interviewData) {
+      // Show next button
+      console.log('There are more parts');
+      els.$nextPartButton.attr('href', '?'+session+'.'+nextPartNumber).show();
+    });
+    request.fail(function(jqXHR, textStatus) {
+      // Hide next button
+      console.log('This is no next part');
+      els.$nextPartButton.hide();
+    });
+
+    // See if there is a previous part
+    if (partNumber > 1) {
+      var request = $.ajax('results/'+interviewName+'/interview.'+prevPartNumber+'.json');
+      request.done(function(interviewData) {
+        // Show prev button
+        console.log('There are previous parts');
+        els.$prevPartButton.attr('href', '?'+session+'.'+prevPartNumber).show();
+      });
+      request.fail(function(jqXHR, textStatus) {
+        // Hide prev button
+        console.log('There are no previous parts');
+        els.$prevPartButton.hide();
+      });
+    }
+    else {
+      // We're on first part, so hide the previous button
+      els.$prevPartButton.hide();
+    }
+  }
 }
 
 function play() {

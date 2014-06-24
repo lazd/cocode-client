@@ -24,4 +24,6 @@
 <glyph unicode="&#xe60e;" d="M96 416l320-192-320-192z" />
 <glyph unicode="&#xe60f;" d="M64 416h160v-384h-160zM288 416h160v-384h-160z" />
 <glyph unicode="&#xe610;" d="M256 48v160l-160-160v352l160-160v160l176-176z" />
+<glyph unicode="&#xe611;" d="M128 32v384h64v-176l160 160v-352l-160 160v-176z" />
+<glyph unicode="&#xe612;" d="M384 416v-384h-64v176l-160-160v352l160-160v176z" />
 </font></defs></svg>

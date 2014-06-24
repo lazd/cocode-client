@@ -1,10 +1,10 @@
 @font-face {
 	font-family: 'cocode';
-	src:url('fonts/cocode.eot?-3nl6gd');
-	src:url('fonts/cocode.eot?#iefix-3nl6gd') format('embedded-opentype'),
-		url('fonts/cocode.woff?-3nl6gd') format('woff'),
-		url('fonts/cocode.ttf?-3nl6gd') format('truetype'),
-		url('fonts/cocode.svg?-3nl6gd#cocode') format('svg');
+	src:url('fonts/cocode.eot?jc9e4q');
+	src:url('fonts/cocode.eot?#iefixjc9e4q') format('embedded-opentype'),
+		url('fonts/cocode.woff?jc9e4q') format('woff'),
+		url('fonts/cocode.ttf?jc9e4q') format('truetype'),
+		url('fonts/cocode.svg?jc9e4q#cocode') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -61,6 +61,12 @@
 }
 .icon-forward:before {
 	content: "\e610";
+}
+.icon-previous:before {
+	content: "\e611";
+}
+.icon-next:before {
+	content: "\e612";
 }
 .icon-speaker-active:before {
 	content: "\e608";
