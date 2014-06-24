@@ -66,7 +66,16 @@ function init() {
   };
 
   // Grab the room and user from the URL
-  var parts = location.hash.slice(1).split('@');
+  var search = window.location.search;
+  var hash = window.location.hash;
+  if (search) {
+    resourceDescription = search.slice(1);
+  }
+  else if (hash) {
+    resourceDescription = hash.slice(1);
+  }
+
+  var parts = resourceDescription.split('@');
   if (parts[1]) {
     var userParts = parts[0].split(':');
 

@@ -84,13 +84,27 @@ function init() {
   // No part by default
   part = '';
 
+  var resourceDescription;
+
   // Get session/part from hash
-  var hash = window.location.hash.slice(1);
-  var hashParts = hash.split('.');
-  if (hashParts.length > 1) {
-    part = '.'+hashParts[1];
+  var search = window.location.search;
+  var hash = window.location.hash;
+  if (search) {
+    resourceDescription = search.slice(1);
   }
-  session = hashParts[0];
+  else if (hash) {
+    resourceDescription = hash.slice(1);
+  }
+  else {
+    alert('No interview specified.');
+    return;
+  }
+
+  var descriptionParts = resourceDescription.split('.');
+  if (descriptionParts.length > 1) {
+    part = '.'+descriptionParts[1];
+  }
+  session = descriptionParts[0];
 
   // Load the interview specified in the hash
   // @todo make time linkable when seek works
