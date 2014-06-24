@@ -24,7 +24,8 @@ var els = {
   editor: '#cc-EditorComponent',
   runCodeButton: '.js-runCode',
   downloadButton: '#cc-DownloadButton',
-  videoTime: '#cc-VideoTime'
+  videoTime: '#cc-VideoTime',
+  videoTimeDisplay: '#cc-VideoTimeDisplay'
 };
 var editor;
 
@@ -45,8 +46,9 @@ function init() {
   }
 
   $(els.videoTime).on('change', function() {
-    var time = els.videoTime.value;
-    seekTo(time);
+    console.log('Not implemented!');
+    // var time = els.videoTime.value;
+    // seekTo(time);
   });
 
   load(window.location.hash.slice(1));
@@ -101,13 +103,15 @@ function load(interviewNameToLoad) {
   });
 }
 
+var hasSeeked = false;
 function loop(time) {
   if (!running) {
     return;
   }
 
   // Update time bar
-  // els.videoTime.value = time;
+  els.videoTime.value = time;
+  els.videoTimeDisplay.textContent = getPrettyTime(time);
 
   var nextEvent = interview.log[eventIndex];
 
@@ -116,12 +120,47 @@ function loop(time) {
       handleEvent(nextEvent);
       eventIndex++;
     }
+
+    // Seek to sync things up initially
+    if (!hasSeeked) {
+      hasSeeked = seekTo(time);
+    }
   }
   else {
     pause();
   }
 
   raf(loop);
+}
+
+function zeroPad(num, spaces) {
+  if (!spaces) {
+    spaces = 2;
+  }
+  num = num + '';
+  while (spaces && num.length < spaces) {
+    num = '0'+num;
+  }
+  return num;
+}
+
+function getPrettyTime(milliseconds) {
+  var x = milliseconds / 1000;
+  var seconds = Math.round(x % 60);
+  x /= 60;
+  var minutes = Math.round(x % 60);
+  x /= 60;
+  var hours = Math.round(x);
+
+  // Only show hours when non-zero
+  var output = '';
+  if (hours > 0) {
+    output += zeroPad(hours) + ':';
+  }
+
+  output += zeroPad(minutes) + ':' + zeroPad(seconds);
+
+  return output;
 }
 
 function setEventIndex(time) {
@@ -198,9 +237,14 @@ function handleVideoStarted(user) {
     d.className = 'cc-Video cc-Video--canEnlarge';
     d.id = 'container_' + user;
     d.appendChild(video);
+
+    // @todo track hark events
+    /*
     var vol = document.createElement('div');
     vol.id = 'volume_' + user;
     vol.className = 'cc-Video-speaking cc-Icon icon-speaker-active';
+    d.appendChild(vol);
+    */
 
     // Click to enlarge video
     var fullSize = false;
@@ -209,7 +253,6 @@ function handleVideoStarted(user) {
       fullSize = !fullSize;
     };
 
-    d.appendChild(vol);
     els.videoPanel.appendChild(d);
 
     videoEls.push(video);
@@ -345,12 +388,28 @@ function handleLanguageChange(language) {
 }
 
 function seekTo(time) {
+  var success = true;
   for (var i = 0; i < audioEls.length; i++) {
-    audioEls[i].currentTime = time/1000;
+    var el = audioEls[i];
+
+    if (el.readyState !== 0) {
+      el.currentTime = time/1000;
+    }
+    else {
+      success = false;
+    }
   }
   for (var i = 0; i < videoEls.length; i++) {
-    videoEls[i].currentTime = time/1000;
+    var el = videoEls[i];
+
+    if (el.readyState !== 0) {
+      el.currentTime = time/1000;
+    }
+    else {
+      success = false;
+    }
   }
+  return success;
 }
 
 $(init);
