@@ -31,10 +31,10 @@ function fizzBuzz() {\n\
     name: 'Given a sorted array of numbers, write a search function',
     video: true,
     test: function() {
-      console.assert('14 is in the array', search(arr, 14));
-      console.assert('10 is in the array', search(arr, 10));
-      console.assert('3 is NOT in the array', search(arr, 3));
-      console.assert('9 is NOT in the array', search(arr, 3));
+      console.assert(search(arr, 14), '14 is in the array');
+      console.assert(search(arr, 10), '10 is in the array');
+      console.assert(!search(arr, 3), '3 is NOT in the array');
+      console.assert(!search(arr, 9), '9 is NOT in the array');
     },
     code: '/**\n\
   Search in a sorted array\n\
