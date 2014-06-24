@@ -3,7 +3,7 @@ var SimpleWebRTC = require('./SimpleWebRTC');
 var Editor = require('./editor');
 var questions = require('./questions');
 
-var recorderOptions = {
+var videoRecorderOptions = {
    type: 'video',
    video: {
       width: 320,
@@ -13,6 +13,9 @@ var recorderOptions = {
       width: 320,
       height: 240
    }
+};
+
+var audioRecorderOptions = {
 };
 
 // Browser detection, uhg
@@ -134,7 +137,7 @@ function init() {
     }
 
     if (isFirefox) {
-      peer.videoRecorder = RecordRTC(peer.stream, recorderOptions);
+      peer.videoRecorder = RecordRTC(peer.stream, videoRecorderOptions);
       peer.videoRecorder.startRecording();
       peer.videoRecorder.startTime = Date.now();
       track('video.started', {
@@ -144,7 +147,7 @@ function init() {
     else {
       // Separate streams for Chrome
       // Only record video, requiring the interviewer to leave their speakers on and let the interviewees audio come through loudly
-      peer.videoRecorder = RecordRTC(peer.stream, recorderOptions);
+      peer.videoRecorder = RecordRTC(peer.stream, videoRecorderOptions);
       peer.videoRecorder.startRecording();
       peer.videoRecorder.startTime = Date.now();
       track('video.started', {
@@ -277,7 +280,7 @@ function init() {
 
     if (isInterviewer) {
       if (isFirefox) {
-        videoRecorder = RecordRTC(stream, recorderOptions);
+        videoRecorder = RecordRTC(stream, videoRecorderOptions);
         videoRecorder.startRecording();
         videoRecorder.startTime = Date.now();
         track('video.started', {
@@ -298,7 +301,7 @@ function init() {
           }
         });
 
-        videoRecorder = RecordRTC(stream, recorderOptions);
+        videoRecorder = RecordRTC(stream, videoRecorderOptions);
 
         audioRecorder.startRecording();
         audioRecorder.startTime = videoRecorder.startTime = Date.now();
@@ -309,14 +312,14 @@ function init() {
 
         // Start at the same time
         // No delay, Chrome 35 on Mac OS X
-        videoRecorder = RecordRTC(stream, recorderOptions);
+        videoRecorder = RecordRTC(stream, videoRecorderOptions);
         videoRecorder.startRecording();
         videoRecorder.startTime = Date.now();
         track('video.started', {
           user: ourUser
         });
 
-        audioRecorder = RecordRTC(stream);
+        audioRecorder = RecordRTC(stream, audioRecorderOptions);
         audioRecorder.startRecording();
         audioRecorder.startTime = Date.now();
         track('audio.started', {
