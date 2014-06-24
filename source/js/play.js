@@ -9,7 +9,7 @@ require('codemirror/mode/clike/clike');
 require('codemirror/mode/ruby/ruby');
 require('codemirror/mode/python/python');
 
-var running = false;
+var paused = true;
 var interview = null;
 var eventIndex = 0;
 var time = 0;
@@ -44,6 +44,7 @@ var els = {
   prevBookmarkButton: '.js-prevBookmark',
   nextBookmarkButton: '.js-nextBookmark',
   markerContainer: '#cc-BookmarkMarkerContainer',
+  playPauseButton: '.js-playPause',
   playPauseButtonIcon: '.js-playPause > i'
 };
 
@@ -81,6 +82,8 @@ function init() {
   // Load the interview specified in the hash
   // @todo make time linkable when seek works
   load(window.location.hash.slice(1));
+
+  raf(loop);
 }
 
 function play() {
@@ -89,9 +92,8 @@ function play() {
   // Play all audio and video
   setMediaPauseState();
 
-  raf(loop);
-
   els.playPauseButtonIcon.className = 'icon-pause';
+  els.playPauseButton.disabled = false;
 }
 
 function pause() {
@@ -305,9 +307,13 @@ function loop(time) {
     if (currentTime > interview.duration) {
       // Pause the interview when it's over
       pause();
+
+      // Don't let them play again until seeking
+      els.playPauseButton.disabled = true;
     }
-    raf(loop);
   }
+
+  raf(loop);
 }
 
 function seekToPrevBookmark() {
@@ -632,23 +638,19 @@ function setMediaPauseState() {
     }
   });
 
-  return newVideoCount;
+  // Set the video count for nice presentation
+  setVideoCount(newVideoCount);
 }
 
 function seekTo(time) {
   time = parseInt(time);
   currentTime = time;
 
-  // Unpause
-  paused = false;
-
-  var newVideoCount = setMediaPauseState();
-
-  // Set the video count for nice presentation
-  setVideoCount(newVideoCount);
-
   // Replay all events
   setEventIndex(time);
+
+  // Unpause
+  play();
 }
 
 $(init);
