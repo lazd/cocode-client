@@ -49,7 +49,7 @@ function init() {
     seekTo(time);
   });
 
-  load('lazdcode');
+  load(window.location.hash.slice(1));
 }
 
 var raf =
@@ -72,8 +72,8 @@ function pause() {
   running = false;
 }
 
-function load(interviewName) {
-  interviewName = interviewName;
+function load(interviewNameToLoad) {
+  interviewName = interviewNameToLoad;
 
   // Load JSON
   var request = $.ajax('results/'+interviewName+'/interview.json');
@@ -189,7 +189,9 @@ function handleVideoStarted(user) {
   if (els.videoPanel) {
     // Create video tag
     var video = document.createElement('video');
-    video.src = 'results/'+interview.name+'/'+user+'.video.webm';
+
+    // @todo use unique interview.name
+    video.src = 'results/'+interviewName+'/'+user+'.video.webm';
     video.autoplay = true;
 
     var d = document.createElement('div');
@@ -216,7 +218,7 @@ function handleVideoStarted(user) {
 
 function handleAudioStarted(user) {
   var audio = document.createElement('audio');
-  audio.src = 'results/'+interview.name+'/'+user+'.audio.wav';
+  audio.src = 'results/'+interviewName+'/'+user+'.audio.wav';
   audio.autoplay = true;
   els.audioPanel.appendChild(audio);
 
@@ -337,6 +339,9 @@ function handleEditorChange(change) {
 function handleLanguageChange(language) {
   // Switch editor the laguage
   editor.setOption('mode', language);
+
+  // Update dropdown
+  $('#cc-Language').val(language);
 }
 
 function seekTo(time) {
