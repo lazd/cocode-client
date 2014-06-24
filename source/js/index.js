@@ -42,10 +42,24 @@ function init() {
   var videoRecorder = null;
   var audioRecorder = null;
 
+  // The current question object and index
   var currentQuestion = null;
   var currentQuestionIndex = 0;
 
+  // Whether to show controls at the bottom
   var isInterviewer = false;
+
+  // Elements to cache references to
+  var els = {
+    videoPanel: '#cc-VideoPanel',
+    local: '#cc-LocalVideo',
+    languageSelect: '#cc-Language',
+    editor: '#cc-EditorComponent',
+    runCodeButton: '.js-runCode',
+    downloadButton: '#cc-DownloadButton',
+    footer: '#cc-Footer',
+    footerButtons: '.js-footerButtons'
+  };
 
   // Grab the room and user from the URL
   var parts = location.hash.slice(1).split('@');
@@ -64,18 +78,6 @@ function init() {
     // Keep default user
     room = parts[0];
   }
-
-
-  var els = {
-    videoPanel: '#cc-VideoPanel',
-    local: '#cc-LocalVideo',
-    languageSelect: '#cc-Language',
-    editor: '#cc-EditorComponent',
-    runCodeButton: '.js-runCode',
-    downloadButton: '#cc-DownloadButton',
-    footer: '#cc-Footer',
-    footerButtons: '.js-footerButtons'
-  };
 
   // Create our webrtc connection
   var webrtc = new SimpleWebRTC({
@@ -106,6 +108,10 @@ function init() {
   // Track initial question so it is shown correctly during replay
   trackSelfShowQuestion();
 
+  /**
+    Communication listeners
+  */
+
   // When it's ready, join if we got a room from the URL
   webrtc.on('readyToCall', function() {
     // You can name it anything
@@ -129,6 +135,251 @@ function init() {
   webrtc.on('channelError', function(label, error) {
     console.error('Error on %s: %s', label, error);
   });
+
+  /*
+    Collaborator has joined
+  */
+  webrtc.on('localMediaStarted', function(video, stream) {
+    console.log('Local video started!');
+
+    setVideoCount(0);
+
+    if (isInterviewer) {
+      if (isFirefox) {
+        videoRecorder = RecordRTC(stream, videoRecorderOptions);
+        videoRecorder.startRecording();
+        videoRecorder.startTime = Date.now();
+        track('video.started', {
+          user: ourUser
+        });
+      }
+      else {
+        // Separate streams for Chrome
+        /*
+        // Technique from: https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC#how-to-fix-audiovideo-sync-issues-on-chrome
+        // Causing a delay where video lags
+        audioRecorder = RecordRTC(stream, {
+          onAudioProcessStarted: function( ) {
+            videoRecorder.startRecording();
+            track('video.started', {
+              user: ourUser
+            });
+          }
+        });
+
+        videoRecorder = RecordRTC(stream, videoRecorderOptions);
+
+        audioRecorder.startRecording();
+        audioRecorder.startTime = videoRecorder.startTime = Date.now();
+        track('audio.started', {
+          user: ourUser
+        });
+        */
+
+        // Start at the same time
+        // No delay, Chrome 35 on Mac OS X
+        videoRecorder = RecordRTC(stream, videoRecorderOptions);
+        videoRecorder.startRecording();
+        videoRecorder.startTime = Date.now();
+        track('video.started', {
+          user: ourUser
+        });
+
+        audioRecorder = RecordRTC(stream, audioRecorderOptions);
+        audioRecorder.startRecording();
+        audioRecorder.startTime = Date.now();
+        track('audio.started', {
+          user: ourUser
+        });
+      }
+    }
+  });
+
+  /*
+    Collaborator has joined
+  */
+  webrtc.on('videoAdded', function(video, peer) {
+    console.log('Collaborator joined!');
+
+    // Update video count
+    setVideoCount(+1);
+
+    // Add video element
+    if (els.videoPanel) {
+      var d = document.createElement('div');
+      d.className = 'cc-Video cc-Video--canEnlarge';
+      d.id = 'container_' + webrtc.getDomId(peer);
+      d.appendChild(video);
+      var vol = document.createElement('div');
+      vol.id = 'volume_' + peer.id;
+      vol.className = 'cc-Video-speaking cc-Icon icon-speaker-active';
+
+      // Click to enlarge video
+      var fullSize = false;
+      video.onclick = function() {
+        d.classList[fullSize ? 'remove' : 'add']('cc-Video--fullSize');
+        fullSize = !fullSize;
+      };
+
+      d.appendChild(vol);
+      els.videoPanel.appendChild(d);
+    }
+
+  });
+
+  /*
+    Collaborator has left
+  */
+  webrtc.on('videoRemoved', function(video, peer) {
+    console.log('Collaborator left!');
+
+    track('collaborator.left', { user: peer.user });
+
+    if (peer.audioRecorder) {
+      track('audio.stopped', {
+        user: peer.user
+      });
+      peer.audioRecorder.stopRecording(function(url) {
+        storeAudioTrack(url, peer);
+      });
+    }
+    if (peer.videoRecorder) {
+      track('video.stopped', {
+        user: peer.user
+      });
+      peer.videoRecorder.stopRecording(function(url) {
+        storeVideoTrack(url, peer);
+      });
+    }
+
+    // Update video count
+    setVideoCount(-1);
+
+    // Remove video element
+    var el = document.getElementById('container_' + webrtc.getDomId(peer));
+    if (els.videoPanel && el) {
+      els.videoPanel.removeChild(el);
+    }
+  });
+
+  /*
+    Volume updates from connected clients
+  */
+  webrtc.on('channelMessage', function(peer, label, data) {
+    if (label === 'simplewebrtc') {
+      // Handle events from hark
+      if (data.type === 'speaking') {
+        showSpeaking(document.getElementById('volume_' + peer.id));
+      }
+      else if (data.type === 'stoppedSpeaking') {
+        hideSpeaking(document.getElementById('volume_' + peer.id));
+      }
+      else if (data.type === 'hello') {
+        if (!peer.user) {
+          peer.user = data.payload.user;
+          console.warn('Got username for '+peer.id+': '+peer.user);
+
+          track('collaborator.joined', { user: peer.user });
+          recordPeer(peer);
+
+          if (currentQuestionIndex !== 0) {
+            // Send current question to peer if we're not on the first one
+            broadcastQuestions(peer);
+          }
+
+          broadcastName(peer);
+        }
+      }
+      else if (data.type === 'changeLanguage') {
+        var language = data.payload;
+
+        setLanguage(language, peer.user);
+      }
+      else if (data.type === 'changeQuestion') {
+        // Use questions from peer
+        questions = data.payload.questions;
+
+        // Show same question as peer
+        showQuestion(data.payload.questionIndex, true);
+
+        track('showQuestion', {
+          user: peer.user,
+          question: currentQuestion,
+          questionIndex: currentQuestionIndex
+        });
+      }
+    }
+  });
+
+  // Save code changes to the question so it shows when revisited
+  editor.on('change', function(i, op) {
+    currentQuestion.code = editor.getValue();
+    setRunButtonStatus();
+  });
+
+  /**
+    DOM Listeners
+  */
+  $(document.body).on('click', '.js-previousQuestion', function() {
+    if (currentQuestionIndex > 0) {
+      showQuestion(--currentQuestionIndex);
+
+      trackSelfShowQuestion();
+    }
+  });
+
+  $(document.body).on('click', '.js-nextQuestion', function() {
+    if (currentQuestionIndex < questions.length - 1) {
+      showQuestion(++currentQuestionIndex);
+
+      trackSelfShowQuestion();
+    }
+  });
+
+  $(document.body).on('click', '.js-saveBookmark', function() {
+    var data = {
+      question: currentTarget,
+      questionIndex: currentQuestionIndex,
+      user: ourUser
+    };
+
+    track('bookmark', data);
+  });
+
+  $(document.body).on('click', '.js-downloadSession', function(event) {
+    event.preventDefault();
+    downloadSession();
+  });
+
+  $(document.body).on('click', '.js-runCode', function(event) {
+    runCode();
+  });
+
+  // Handle language changes
+  $('#cc-Language').on('change', function(event) {
+    var language = event.currentTarget.value;
+
+    setLanguage(language, ourUser);
+  });
+
+  // Handle create room form
+  $('#cc-CreateRoom').on('submit', function() {
+    var val = $('#cc-CreateRoom-roomName').val().toLowerCase().replace(/\s/g, '-').replace(/[^A-Za-z0-9_\-]/g, '');
+    webrtc.createRoom(val, function(err, name) {
+      if (!err) {
+        window.location.hash = '#'+name;
+        setRoom(name);
+      }
+      else {
+        alert('Error creating room: '+err);
+      }
+    });
+    return false;
+  });
+
+  /**
+    Methods
+  */
 
   function recordPeer(peer) {
     // Don't have clients record
@@ -270,97 +521,6 @@ function init() {
     downloadRecordings();
   }
 
-  /*
-    Collaborator has joined
-  */
-  webrtc.on('localMediaStarted', function(video, stream) {
-    console.log('Local video started!');
-
-    setVideoCount(0);
-
-    if (isInterviewer) {
-      if (isFirefox) {
-        videoRecorder = RecordRTC(stream, videoRecorderOptions);
-        videoRecorder.startRecording();
-        videoRecorder.startTime = Date.now();
-        track('video.started', {
-          user: ourUser
-        });
-      }
-      else {
-        // Separate streams for Chrome
-        /*
-        // Technique from: https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC#how-to-fix-audiovideo-sync-issues-on-chrome
-        // Causing a delay where video lags
-        audioRecorder = RecordRTC(stream, {
-          onAudioProcessStarted: function( ) {
-            videoRecorder.startRecording();
-            track('video.started', {
-              user: ourUser
-            });
-          }
-        });
-
-        videoRecorder = RecordRTC(stream, videoRecorderOptions);
-
-        audioRecorder.startRecording();
-        audioRecorder.startTime = videoRecorder.startTime = Date.now();
-        track('audio.started', {
-          user: ourUser
-        });
-        */
-
-        // Start at the same time
-        // No delay, Chrome 35 on Mac OS X
-        videoRecorder = RecordRTC(stream, videoRecorderOptions);
-        videoRecorder.startRecording();
-        videoRecorder.startTime = Date.now();
-        track('video.started', {
-          user: ourUser
-        });
-
-        audioRecorder = RecordRTC(stream, audioRecorderOptions);
-        audioRecorder.startRecording();
-        audioRecorder.startTime = Date.now();
-        track('audio.started', {
-          user: ourUser
-        });
-      }
-    }
-  });
-
-  /*
-    Collaborator has joined
-  */
-  webrtc.on('videoAdded', function(video, peer) {
-    console.log('Collaborator joined!');
-
-    // Update video count
-    setVideoCount(+1);
-
-    // Add video element
-    if (els.videoPanel) {
-      var d = document.createElement('div');
-      d.className = 'cc-Video cc-Video--canEnlarge';
-      d.id = 'container_' + webrtc.getDomId(peer);
-      d.appendChild(video);
-      var vol = document.createElement('div');
-      vol.id = 'volume_' + peer.id;
-      vol.className = 'cc-Video-speaking cc-Icon icon-speaker-active';
-
-      // Click to enlarge video
-      var fullSize = false;
-      video.onclick = function() {
-        d.classList[fullSize ? 'remove' : 'add']('cc-Video--fullSize');
-        fullSize = !fullSize;
-      };
-
-      d.appendChild(vol);
-      els.videoPanel.appendChild(d);
-    }
-
-  });
-
   function setLanguage(language, user) {
     // Update dropdown
     $('#cc-Language').val(language);
@@ -384,153 +544,6 @@ function init() {
   function storeVideoTrack(url, peer) {
     videoURLs[peer.user || peer.id] = url;
   }
-
-  /*
-    Collaborator has left
-  */
-  webrtc.on('videoRemoved', function(video, peer) {
-    console.log('Collaborator left!');
-
-    track('collaborator.left', { user: peer.user });
-
-    if (peer.audioRecorder) {
-      track('audio.stopped', {
-        user: peer.user
-      });
-      peer.audioRecorder.stopRecording(function(url) {
-        storeAudioTrack(url, peer);
-      });
-    }
-    if (peer.videoRecorder) {
-      track('video.stopped', {
-        user: peer.user
-      });
-      peer.videoRecorder.stopRecording(function(url) {
-        storeVideoTrack(url, peer);
-      });
-    }
-
-    // Update video count
-    setVideoCount(-1);
-
-    // Remove video element
-    var el = document.getElementById('container_' + webrtc.getDomId(peer));
-    if (els.videoPanel && el) {
-      els.videoPanel.removeChild(el);
-    }
-  });
-
-  /*
-    Volume updates from connected clients
-  */
-  webrtc.on('channelMessage', function(peer, label, data) {
-    if (label === 'simplewebrtc') {
-      // Handle events from hark
-      if (data.type === 'speaking') {
-        showSpeaking(document.getElementById('volume_' + peer.id));
-      }
-      else if (data.type === 'stoppedSpeaking') {
-        hideSpeaking(document.getElementById('volume_' + peer.id));
-      }
-      else if (data.type === 'hello') {
-        if (!peer.user) {
-          peer.user = data.payload.user;
-          console.warn('Got username for '+peer.id+': '+peer.user);
-
-          track('collaborator.joined', { user: peer.user });
-          recordPeer(peer);
-
-          if (currentQuestionIndex !== 0) {
-            // Send current question to peer if we're not on the first one
-            broadcastQuestions(peer);
-          }
-
-          broadcastName(peer);
-        }
-      }
-      else if (data.type === 'changeLanguage') {
-        var language = data.payload;
-
-        setLanguage(language, peer.user);
-      }
-      else if (data.type === 'changeQuestion') {
-        // Use questions from peer
-        questions = data.payload.questions;
-
-        // Show same question as peer
-        showQuestion(data.payload.questionIndex, true);
-
-        track('showQuestion', {
-          user: peer.user,
-          question: currentQuestion,
-          questionIndex: currentQuestionIndex
-        });
-      }
-    }
-  });
-
-  $(document.body).on('click', '.js-previousQuestion', function() {
-    if (currentQuestionIndex > 0) {
-      showQuestion(--currentQuestionIndex);
-
-      trackSelfShowQuestion();
-    }
-  });
-
-  $(document.body).on('click', '.js-nextQuestion', function() {
-    if (currentQuestionIndex < questions.length - 1) {
-      showQuestion(++currentQuestionIndex);
-
-      trackSelfShowQuestion();
-    }
-  });
-
-  $(document.body).on('click', '.js-saveBookmark', function() {
-    var data = {
-      question: currentTarget,
-      questionIndex: currentQuestionIndex,
-      user: ourUser
-    };
-
-    track('bookmark', data);
-  });
-
-  $(document.body).on('click', '.js-downloadSession', function(event) {
-    event.preventDefault();
-    downloadSession();
-  });
-
-  $(document.body).on('click', '.js-runCode', function(event) {
-    runCode();
-  });
-
-  // Handle language changes
-  $('#cc-Language').on('change', function(event) {
-    var language = event.currentTarget.value;
-
-    setLanguage(language, ourUser);
-  });
-
-  // Save code changes to the question so it shows when revisited
-  editor.on('change', function(i, op) {
-    currentQuestion.code = editor.getValue();
-    setRunButtonStatus();
-  });
-
-  // Handle create room form
-  $('#cc-CreateRoom').on('submit', function() {
-    var val = $('#cc-CreateRoom-roomName').val().toLowerCase().replace(/\s/g, '-').replace(/[^A-Za-z0-9_\-]/g, '');
-    webrtc.createRoom(val, function(err, name) {
-      if (!err) {
-        window.location.hash = '#'+name;
-        setRoom(name);
-      }
-      else {
-        alert('Error creating room: '+err);
-      }
-    });
-    return false;
-  });
 
   function setRunButtonStatus() {
     if (!currentQuestion.code) {
