@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+    <head>
+        <title>CoCode</title>
+        <meta charset="utf-8">
+        <link rel="shortcut icon" href="/images/favicon.ico">
+
+        <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'>
+        <script src="play.js"></script>
+        <link href="index.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="cc-Header">
+            <div class="cc-Header-column">
+                <img class="cc-Logo" src="images/logo.png" alt="CoTrain">
+            </div>
+
+            <div class="cc-Header-column cc-Header-column--center cc-Header-column--wide">
+                
+                <h1 class="cc-Header-h1">
+                    <a class="cc-JoinLink" href="#"><i class="icon-link cc-IconButton u-hidden" id="cc-JoinLink"></i><span id="cc-RoomName"></span></a>
+                </h1>
+
+                <h2 class="cc-Header-h2" id="cc-SubTitle"></h2>
+
+                <form id="cc-CreateRoom" style="display: none;">
+                    <input class="cc-Input" id="cc-CreateRoom-roomName" type="text">
+                    <button class="cc-Button cc-Button--blue" type="submit">Create Room</button>
+                </form>
+            </div>
+
+
+            <div class="cc-Header-column cc-Header-column--right">
+                <select class="cc-Button cc-Button--blue" id="cc-Language">
+                    <option value="javascript">JavaScript</option>
+                    <option value="clike">C / C++</option>
+                    <option value="ruby">Ruby</option>
+                    <option value="python">Python</option>
+                    <option value="htmlmixed">HTML</option>
+                    <option value="css">CSS</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="cc-Interview">
+            <div class="cc-Interview-component" id="cc-EditorComponent">
+                <textarea id="cc-Code"></textarea>
+            </div>
+        </div>
+
+        <div class="cc-VideoPanel cc-VideoPanel--full" id="cc-VideoPanel"></div>
+        <div id="cc-AudioPanel"></div>
+
+        <div class="cc-Footer">
+            <div class="cc-Header-column cc-Header-column--left js-footerButtons">
+                <a href="#" class="cc-IconButton cc-IconButton--large js-prevPart" title="Previous part"><i class="icon-previous"></i></a>
+            </div>
+
+            <div class="cc-Header-column cc-Header-column--center cc-Header-column--wide cc-Header-column--noPadding js-footerButtons">
+                <div class="cc-ButtonBar cc-TimelineContainer-buttons">
+                    <button class="cc-IconButton cc-IconButton--large js-prevBookmark" title="Previous bookmark"><i class="icon-backward"></i></button>
+                    <button class="cc-IconButton cc-IconButton--large js-playPause" title="Play/Pause"><i class="icon-play"></i></button>
+                    <button class="cc-IconButton cc-IconButton--large js-nextBookmark" title="Next bookmark"><i class="icon-forward"></i></button>
+                </div>
+
+                <div class="cc-TimelineContainer" id="cc-TimelineContainer">
+
+                    <div class="cc-TimelineContainer-sliderContainer" id="cc-SliderContainer">
+                        <div class="cc-TimelineContainer-currentTime" id="cc-VideoTimeDisplay"></div>
+                        <input class="cc-TimelineContainer-slider" id="cc-VideoTime" type="range" min="0" max="100" value="0">
+                        <div class="cc-TimelineContainer-totalTime" id="cc-VideoTotalTimeDisplay"></div>
+                    </div>
+
+                    <div class="cc-BookmarkMarkerContainer" id="cc-BookmarkMarkerContainer"></div>
+                </div>
+            </div>
+
+            <div class="cc-ButtonBar cc-Header-column cc-Header-column--right js-footerButtons">
+                <a href="#" class="cc-IconButton cc-IconButton--large js-nextPart" title="Next part"><i class="icon-next"></i></a>
+            </div>
+        </div>
+    </body>
+</html>
