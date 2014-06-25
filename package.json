@@ -15,6 +15,7 @@
     "jquery": "^2.1.1",
     "mockconsole": "^0.0.1",
     "socket.io-client": "^0.9.16",
+    "stunturncheck": "0.0.2",
     "webrtc": "^1.10.0",
     "webrtcsupport": "^0.7.3",
     "wildemitter": "^1.0.1"

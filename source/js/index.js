@@ -2,6 +2,7 @@ var $ = require('jquery');
 var SimpleWebRTC = require('./SimpleWebRTC');
 var Editor = require('./editor');
 var questions = require('./questions');
+var stunturncheck = require('stunturncheck');
 
 var videoRecorderOptions = {
    type: 'video',
@@ -103,6 +104,141 @@ function init() {
   });
 
   webrtc.ourUser = ourUser;
+
+  // local p2p/ice failure
+  webrtc.on('iceFailed', function (peer) {
+    handleIceFailure('local', peer);
+  });
+  // remote p2p/ice failure
+  webrtc.on('connectivityError', function (peer) {
+    handleIceFailure('remote', peer);
+  });
+
+  function handleIceFailure(source, peer) {
+    var cause = 'both';
+    if (peer.pc.hadLocalRelayCandidate && peer.pc.hadRemoteRelayCandidate) {
+      cause = 'turn'; // blame the turn servers
+    }
+    else if (peer.pc.hadRemoteRelayCandidate) {
+      cause = 'local';
+    }
+    else if (peer.pc.hadLocalRelayCandidate) {
+      cause = 'remote';
+    }
+    else {
+      cause = 'both';
+    }
+
+    var iceServers;
+    if (webrtc.client) {
+      iceServers = webrtc.client.jingle.config.peerConnectionConfig.iceServers;
+    }
+    else {
+      iceServers = webrtc.webrtc.config.peerConnectionConfig.iceServers;
+    }
+
+    switch (cause) {
+    case 'turn':
+      console.error('TURN server failure');
+      break;
+    case 'local':
+      console.error('Local connection failure.');
+      break;
+    case 'remote':
+      console.error('Peer connection failure.');
+      break;
+    case 'both':
+      console.error('Peer and local connection failure.');
+      break;
+    }
+  }
+
+  function evaluateConnectivity(connectivity, isfinal, timeout) {
+      console.log('%s connectivity check:', isfinal ? 'Final' : 'Preliminary', connectivity);
+
+      if (timeout) {
+          // when the timeout strikes, bad things may have happened. or not.
+          // e.g. we may have turn but not TURN/TCP on port 80
+          console.log('Connection timeout!');
+      }
+      else if (isfinal) {
+          // we need to show something to the user
+          if (!(connectivity.stun || connectivity.turn)) {
+              if (connectivity.turntcp) {
+                  // we have TURN/TCP... show a quality warning
+                console.log('We have TURN/TCP');
+              }
+              else if (connectivity.turntls) {
+                  // we have TURN/TLS... even worse quality?
+                  console.log('We have TURN/TLS');
+              }
+              else {
+                  // no connectivity at all
+                  console.error('No connectivity.');
+                  alert('We were unable to connect to the WebRTC TURN server, so it looks like we\'ll have to do this on Skype.');
+              }
+          }
+      }
+      else {
+          if (connectivity.stun) {
+              // we have stun
+              console.log('We have STUN.');
+          }
+          if (connectivity.turn) {
+              // we have turn at least so from our side stuff should work
+              console.log('We have TURN from our side.');
+          }
+      }
+  }
+
+  webrtc.on('turnservers', function (args) {
+    // console.log('Got turn servers ', args);
+    var iceServers;
+    if (webrtc.client) {
+        iceServers = webrtc.client.jingle.config.peerConnectionConfig.iceServers;
+    }
+    else {
+        iceServers = webrtc.webrtc.config.peerConnectionConfig.iceServers;
+    }
+    var pendingChecks = 0;
+    var connectivity = {};
+
+    // since chrome doesn't timeout itself for TURN/TCP...
+    // https://code.google.com/p/webrtc/issues/detail?id=3249
+    var lastResort = window.setTimeout(function () {
+        evaluateConnectivity(connectivity, false, true);
+    }, 20 * 1000);
+    iceServers.forEach(function (server) {
+        pendingChecks++;
+        stunturncheck(server, function (err, res) {
+            pendingChecks--;
+            if (!err) {
+                if (server.url.indexOf('stun:') === 0) {
+                    connectivity.stun = res > 0;
+                }
+                else if (server.url.indexOf('turn:') === 0) {
+                    // TURN and TURN/TCP
+                    if (server.url.indexOf('?transport=tcp') != -1) {
+                        connectivity.turntcp = res > 0;
+                    }
+                    else {
+                        connectivity.turn = res > 0;
+                    }
+                }
+                else if (server.url.indexOf('turns:') === 0) {
+                    // TURN/TLS in M35
+                    connectivity.turntls = res > 0;
+                }
+                evaluateConnectivity(connectivity, pendingChecks === 0);
+            }
+            if (pendingChecks === 0 && lastResort) {
+                window.clearTimeout(lastResort);
+                lastResort = 0;
+            }
+        });
+    });
+  });
+
 
   // Create the editor
   var editor = Editor(webrtc, track);
