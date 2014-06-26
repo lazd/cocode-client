@@ -16,6 +16,7 @@
 @import 'Button.css';
 @import 'IconButton.css';
 @import 'ButtonBar.css';
+@import 'Fields.css';
 @import 'Dialog.css';
 @import 'Header.css';
 @import 'Interview.css';
@@ -30,7 +31,7 @@
 .cc-JoinLink i {
   padding: 8px;
   top: 50%;
-  margin-top: -16px; /* vertical align */
+  margin-top: -20px; /* vertical align */
   left: -36px; /* offset to the left */
   position: absolute;
 }
