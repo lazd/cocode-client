@@ -32,8 +32,14 @@ function init() {
   // A log of events
   var log = [];
 
+  // The name of the room
+  var room = '';
+
   // The name of the user
   var ourUser = 'unnamed';
+
+  // The URL for the candidate
+  var candidateURL = '';
 
   // A list of recorded URLs
   var trackURLs = [];
@@ -94,6 +100,12 @@ function init() {
     room = parts[0];
   }
 
+  // Default candidate URL
+  candidateURL = '?Candidate@'+room;
+  if (!isInterviewer) {
+    candidateURL = '?'+ourUser+'@'+room;
+  }
+
   // Create our webrtc connection
   var webrtc = new SimpleWebRTC({
     localVideoEl: els.local,
@@ -106,91 +118,49 @@ function init() {
 
   webrtc.ourUser = ourUser;
 
-  // local p2p/ice failure
+  // Create the editor
+  var editor = Editor(webrtc, track);
+
+  // Make element references
+  for (var el in els) {
+    els['$'+el] = $(els[el]);
+    els[el] = els['$'+el][0];
+  }
+
+  if (!room) {
+    $('#cc-Underlay').show();
+    $('#cc-CreateRoom').show();
+  }
+  else {
+    startSession();
+  }
+
+  /**
+    Keyframes
+  */
+
+  storeKeyframe();
+  setInterval(function() {
+    if (keyframeChangedSinceLastReport) {
+      console.log('Storing keyframe')
+      track('keyframe', currentKeyframe);
+      keyframeChangedSinceLastReport = false;
+    }
+  }, 1000);
+
+  /**
+    Communication listeners
+  */
+
+  // Local p2p/ice failure
   webrtc.on('iceFailed', function (peer) {
     handleIceFailure('local', peer);
   });
-  // remote p2p/ice failure
+
+  // Remote p2p/ice failure
   webrtc.on('connectivityError', function (peer) {
     handleIceFailure('remote', peer);
   });
-
-  function handleIceFailure(source, peer) {
-    var cause = 'both';
-    if (peer.pc.hadLocalRelayCandidate && peer.pc.hadRemoteRelayCandidate) {
-      cause = 'turn'; // blame the turn servers
-    }
-    else if (peer.pc.hadRemoteRelayCandidate) {
-      cause = 'local';
-    }
-    else if (peer.pc.hadLocalRelayCandidate) {
-      cause = 'remote';
-    }
-    else {
-      cause = 'both';
-    }
-
-    var iceServers;
-    if (webrtc.client) {
-      iceServers = webrtc.client.jingle.config.peerConnectionConfig.iceServers;
-    }
-    else {
-      iceServers = webrtc.webrtc.config.peerConnectionConfig.iceServers;
-    }
-
-    switch (cause) {
-    case 'turn':
-      console.error('TURN server failure');
-      break;
-    case 'local':
-      console.error('Local connection failure.');
-      break;
-    case 'remote':
-      console.error('Peer connection failure.');
-      break;
-    case 'both':
-      console.error('Peer and local connection failure.');
-      break;
-    }
-  }
-
-  function evaluateConnectivity(connectivity, isfinal, timeout) {
-      console.log('%s connectivity check:', isfinal ? 'Final' : 'Preliminary', connectivity);
-
-      if (timeout) {
-          // when the timeout strikes, bad things may have happened. or not.
-          // e.g. we may have turn but not TURN/TCP on port 80
-          console.log('Connection timeout!');
-      }
-      else if (isfinal) {
-          // we need to show something to the user
-          if (!(connectivity.stun || connectivity.turn)) {
-              if (connectivity.turntcp) {
-                  // we have TURN/TCP... show a quality warning
-                console.log('We have TURN/TCP');
-              }
-              else if (connectivity.turntls) {
-                  // we have TURN/TLS... even worse quality?
-                  console.log('We have TURN/TLS');
-              }
-              else {
-                  // no connectivity at all
-                  console.error('No connectivity.');
-                  alert('We were unable to connect to the WebRTC TURN server, so it looks like we\'ll have to do this on Skype.');
-              }
-          }
-      }
-      else {
-          if (connectivity.stun) {
-              // we have stun
-              console.log('We have STUN.');
-          }
-          if (connectivity.turn) {
-              // we have turn at least so from our side stuff should work
-              console.log('We have TURN from our side.');
-          }
-      }
-  }
 
   webrtc.on('turnservers', function (args) {
     // console.log('Got turn servers ', args);
@@ -239,42 +209,6 @@ function init() {
         });
     });
   });
-
-
-  // Create the editor
-  var editor = Editor(webrtc, track);
-
-  // Make element references
-  for (var el in els) {
-    els['$'+el] = $(els[el]);
-    els[el] = els['$'+el][0];
-  }
-
-  // Start the interview
-  showQuestion(0, true);
-
-  track('sessionStarted');
-
-  // Track initial question so it is shown correctly during replay
-  trackSelfShowQuestion();
-
-  /**
-    Keyframes
-  */
-
-  storeKeyframe();
-  setInterval(function() {
-    if (keyframeChangedSinceLastReport) {
-      console.log('Storing keyframe')
-      track('keyframe', currentKeyframe);
-      keyframeChangedSinceLastReport = false;
-    }
-  }, 1000);
-
-  /**
-    Communication listeners
-  */
-
   // When it's ready, join if we got a room from the URL
   webrtc.on('readyToCall', function() {
     // You can name it anything
@@ -535,16 +469,30 @@ function init() {
     setLanguage(language, ourUser);
   });
 
+  // Don't let people click the link
+  $('#cc-JoinLink').on('click', function(event) {
+    event.preventDefault();
+  });
+
   // Handle create room form
   $('#cc-CreateRoom').on('submit', function() {
-    var val = $('#cc-CreateRoom-roomName').val().toLowerCase().replace(/\s/g, '-').replace(/[^A-Za-z0-9_\-]/g, '');
-    webrtc.createRoom(val, function(err, name) {
-      if (!err) {
-        window.location.hash = '#'+name;
-        setRoom(name);
+    var interviewerName = $('#cc-CreateRoom-interviewerName').val();
+    var candidateName = $('#cc-CreateRoom-candidateName').val();
+
+    // Store room name and candidate URL
+    room = sanitizeRoomName(interviewerName+'-'+candidateName);
+    candidateURL = '?'+candidateName+'@'+room;
+
+    webrtc.createRoom(room, function(err, name) {
+      if (err) {
+        alert('Error creating room: '+err);
       }
       else {
-        alert('Error creating room: '+err);
+        $('#cc-Underlay').hide();
+        $('#cc-CreateRoom').hide();
+
+        window.history.replaceState({}, null, '?'+interviewerName+':interviewer@'+room);
+        startSession();
       }
     });
     return false;
@@ -553,6 +501,99 @@ function init() {
   /**
     Methods
   */
+
+  function sanitizeRoomName(name) {
+    return name.toLowerCase().replace(/\s/g, '-').replace(/[^A-Za-z0-9_\-]/g, '');
+  }
+
+  function startSession() {
+    $('#cc-JoinLink').attr('href', candidateURL);
+
+    // Start the interview
+    showQuestion(0, true);
+
+    track('sessionStarted');
+
+    // Track initial question so it is shown correctly during replay
+    trackSelfShowQuestion();
+  }
+
+  function handleIceFailure(source, peer) {
+    var cause = 'both';
+    if (peer.pc.hadLocalRelayCandidate && peer.pc.hadRemoteRelayCandidate) {
+      cause = 'turn'; // blame the turn servers
+    }
+    else if (peer.pc.hadRemoteRelayCandidate) {
+      cause = 'local';
+    }
+    else if (peer.pc.hadLocalRelayCandidate) {
+      cause = 'remote';
+    }
+    else {
+      cause = 'both';
+    }
+
+    var iceServers;
+    if (webrtc.client) {
+      iceServers = webrtc.client.jingle.config.peerConnectionConfig.iceServers;
+    }
+    else {
+      iceServers = webrtc.webrtc.config.peerConnectionConfig.iceServers;
+    }
+
+    switch (cause) {
+    case 'turn':
+      console.error('TURN server failure');
+      break;
+    case 'local':
+      console.error('Local connection failure.');
+      break;
+    case 'remote':
+      console.error('Peer connection failure.');
+      break;
+    case 'both':
+      console.error('Peer and local connection failure.');
+      break;
+    }
+  }
+
+  function evaluateConnectivity(connectivity, isfinal, timeout) {
+      console.log('%s connectivity check:', isfinal ? 'Final' : 'Preliminary', connectivity);
+
+      if (timeout) {
+          // when the timeout strikes, bad things may have happened. or not.
+          // e.g. we may have turn but not TURN/TCP on port 80
+          console.log('Connection timeout!');
+      }
+      else if (isfinal) {
+          // we need to show something to the user
+          if (!(connectivity.stun || connectivity.turn)) {
+              if (connectivity.turntcp) {
+                  // we have TURN/TCP... show a quality warning
+                console.log('We have TURN/TCP');
+              }
+              else if (connectivity.turntls) {
+                  // we have TURN/TLS... even worse quality?
+                  console.log('We have TURN/TLS');
+              }
+              else {
+                  // no connectivity at all
+                  console.error('No connectivity.');
+                  alert('We were unable to connect to the WebRTC TURN server, so it looks like we\'ll have to do this on Skype.');
+              }
+          }
+      }
+      else {
+          if (connectivity.stun) {
+              // we have stun
+              console.log('We have STUN.');
+          }
+          if (connectivity.turn) {
+              // we have turn at least so from our side stuff should work
+              console.log('We have TURN from our side.');
+          }
+      }
+  }
 
   function recordPeer(peer) {
     // Don't have clients record
@@ -846,18 +887,8 @@ function init() {
     $('.js-nextQuestion').attr('disabled', currentQuestionIndex === questions.length - 1);
   }
 
-  // @todo change to setTitle, separate room creation into a different method
-  function setRoom(name, subTitle) {
-    if (name) {
-      var url = window.location.href;
-      $('#cc-CreateRoom').hide();
-      $('#cc-RoomName').text(name);
-      $('#cc-JoinLink').removeClass('u-hidden').attr('href', url);
-    }
-    else {
-      $('#cc-CreateRoom').show();
-      $('#cc-JoinLink').addClass('u-hidden');
-    }
+  function setTitle(name, subTitle) {
+    $('#cc-RoomName').text(name);
 
     if (subTitle) {
       $('#cc-SubTitle').show().text(subTitle);
@@ -1054,10 +1085,10 @@ function init() {
       currentQuestion = questions[questionIndex];
 
       if (currentQuestion.code) {
-        setRoom('Question '+(questionIndex+1), currentQuestion.name);
+        setTitle('Question '+(questionIndex+1), currentQuestion.name);
       }
       else {
-        setRoom(currentQuestion.name);
+        setTitle(currentQuestion.name);
       }
 
       if (currentQuestion.video) {
