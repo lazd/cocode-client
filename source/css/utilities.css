@@ -1,3 +1,23 @@
+:root {
+  --fadeTime: 0.5s;
+}
+
 .u-hidden {
   display: none;
+}
+
+.u-fades {
+  -webkit-transition: opacity var(--fadeTime) ease-in-out;
+  -moz-transition: opacity var(--fadeTime) ease-in-out;
+  transition: opacity var(--fadeTime) ease-in-out;
+
+  opacity: 0;
+}
+
+.u-fadeIn {
+  opacity: 1;
+}
+
+.u-fadeOut {
+  opacity: 0;
 }
