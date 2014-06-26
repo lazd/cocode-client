@@ -1,8 +1,9 @@
 var $ = require('jquery');
+var stunturncheck = require('stunturncheck');
 var SimpleWebRTC = require('./SimpleWebRTC');
 var Editor = require('./editor');
 var questions = require('./questions');
-var stunturncheck = require('stunturncheck');
+var Growl = require('./growl');
 
 var videoRecorderOptions = {
    type: 'video',
@@ -142,7 +143,6 @@ function init() {
   storeKeyframe();
   setInterval(function() {
     if (keyframeChangedSinceLastReport) {
-      console.log('Storing keyframe')
       track('keyframe', currentKeyframe);
       keyframeChangedSinceLastReport = false;
     }
@@ -391,6 +391,9 @@ function init() {
           }
 
           broadcastName(peer);
+
+          // Show a growl
+          new Growl(peer.user+' has joined.');
         }
       }
       else if (data.type === 'changeLanguage') {
@@ -449,6 +452,8 @@ function init() {
       questionIndex: currentQuestionIndex,
       user: ourUser
     };
+
+    new Growl('Bookmark saved.');
 
     track('bookmark', data);
   });
@@ -513,6 +518,9 @@ function init() {
     showQuestion(0, true);
 
     track('sessionStarted');
+    track('collaborator.joined', {
+      user: ourUser
+    });
 
     // Track initial question so it is shown correctly during replay
     trackSelfShowQuestion();

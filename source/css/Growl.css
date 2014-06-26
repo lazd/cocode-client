@@ -1,0 +1,41 @@
+.cc-Growls {
+  position: absolute;
+
+  top: var(--headerHeight);
+  right: 0;
+  left: 0;
+  bottom: var(--headerHeight);
+
+  z-index: 100;
+
+  overflow: hidden;
+
+  pointer-events: none;
+}
+
+.cc-Growl {
+  position: absolute;
+  right: -200px;
+
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.5);
+
+  padding: 10px;
+  margin: 10px 10px 0 10px;
+
+  -webkit-transition: all var(--fadeTime) ease-in-out;
+  -moz-transition: all var(--fadeTime) ease-in-out;
+  transition: all var(--fadeTime) ease-in-out;
+
+  /* Allow click */
+  pointer-events: auto;
+
+  /* No selections */
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+
+  cursor: pointer; /* Show hand */
+
+  opacity: 0; /* Start hidden */
+}

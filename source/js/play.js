@@ -1,6 +1,7 @@
 var $ = require('jquery');
-var raf = require('./raf.js');
 var CodeMirror = require('codemirror');
+var raf = require('./raf.js');
+var Growl = require('./growl');
 
 // Include modes
 require('codemirror/mode/javascript/javascript');
@@ -128,7 +129,7 @@ function init() {
     });
     request.fail(function(jqXHR, textStatus) {
       // Hide next button
-      console.log('This is no next part');
+      console.log('There is no next part');
       els.$nextPartButton.hide();
     });
 
@@ -315,6 +316,7 @@ function preloadAudio(url, index) {
 
 function preloadTracks(cb) {
   var toLoad = 0;
+  var totalTracks = 0;
   function handleCanPlay() {
     toLoad--;
     if (toLoad === 0 && typeof cb === 'function') {
@@ -339,7 +341,12 @@ function preloadTracks(cb) {
       track._startTime = time;
       track.addEventListener('canplay', handleCanPlay);
       toLoad++;
+      totalTracks++;
     }
+  }
+
+  if (!totalTracks) {
+    cb();
   }
 }
 
@@ -503,7 +510,7 @@ function handleEvent(event, index) {
     handleEditorRefresh(data.body);
   }
   else if (name === 'editor.languageChange') {
-    handleLanguageChange(data.language);
+    handleLanguageChange(data.language, user);
   }
   else if (name === 'video.started') {
     handleVideoStarted(index);
@@ -514,6 +521,9 @@ function handleEvent(event, index) {
   else if (name === 'video.ended') {
     // @todo #27 hide video
     // setVideoCount();
+  }
+  else if (name === 'collaborator.joined') {
+    handleUserJoined(user);
   }
 }
 
@@ -541,6 +551,10 @@ function setVideoCount(count) {
 
   els.videoPanel.className = els.videoPanel.className.replace(/cc-VideoPanel--\d+/g, '');
   els.videoPanel.classList.add('cc-VideoPanel--'+videoCount);
+}
+
+function handleUserJoined(user) {
+  new Growl(user+' has joined.');
 }
 
 function handleVideoStarted(index) {
@@ -667,12 +681,18 @@ function handleEditorChange(change) {
   editor.replaceRange(change.text, change.from, change.to);
 }
 
-function handleLanguageChange(language) {
+function handleLanguageChange(language, user) {
   // Switch editor the laguage
   editor.setOption('mode', language);
 
   // Update dropdown
   $('#cc-Language').val(language);
+
+  // Get the label value from the dropdown
+  // @todo use an object map instead
+  var languageLabel = $('#cc-Language option:selected').text();
+
+  new Growl(user+' changed the language to '+languageLabel);
 }
 
 function eachMedia(cb) {

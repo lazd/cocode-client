@@ -6,7 +6,6 @@
 @import 'icons/style.css';
 
 /* Support */
-@import 'utilities.css';
 @import 'common.css';
 
 /* Components */
@@ -19,10 +18,14 @@
 @import 'Fields.css';
 @import 'Dialog.css';
 @import 'Header.css';
+@import 'Growl.css';
 @import 'Interview.css';
 @import 'Video.css';
 @import 'VideoPanel.css';
 @import 'TimelineContainer.css';
+
+/* Allow utilities to override classes */
+@import 'utilities.css';
 
 .cc-JoinLink {
   position: relative;
