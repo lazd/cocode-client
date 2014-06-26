@@ -135,10 +135,10 @@ module.exports = function(grunt) {
   });
 
   // Common tasks for all build types
-  grunt.registerTask('build-common', ['clean', 'copy', 'symlink']);
+  grunt.registerTask('build-common', ['clean', 'copy']);
 
   // Tasks to run before a dev build
-  grunt.registerTask('build-dev-before', ['build-common', 'rework:dev']);
+  grunt.registerTask('build-dev-before', ['build-common', 'symlink', 'rework:dev']);
   grunt.registerTask('build-prod-before', ['build-common', 'rework:prod']);
 
   // Build types
