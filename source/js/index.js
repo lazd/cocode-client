@@ -69,6 +69,7 @@ function init() {
   // Grab the room and user from the URL
   var search = window.location.search;
   var hash = window.location.hash;
+  var resourceDescription = '';
   if (search) {
     resourceDescription = search.slice(1);
   }

@@ -1,8 +1,59 @@
+:root {
+  --dialogHeaderHeight: 48px;
+  --dialogHeaderFontSize: 24px;
+  --dialogHeaderColor: white;
+  --dialogFooterHeight: 48px;
+
+  --dialogBackground: rgb(230, 230, 230);
+
+  --promptWidth: 400px;
+  --promptHeight: 200px;
+}
+
 .cc-Dialog {
   position: absolute;
   top: 50%;
   left: 50%;
 
-  width: 400px;
-  height: 200px;
+  width: var(--promptWidth);
+  height: var(--promptHeight);
+
+  margin-left: calc(-1 * var(--promptWidth) / 2);
+  margin-top: calc(-1 * var(--promptHeight) / 2);
+
+  z-index: 100;
+  background: var(--dialogBackground);
+}
+
+.cc-Dialog-header {
+  height: var(--dialogHeaderHeight);
+  padding: 0 12px;
+
+  background: var(--coTrainBlue-light);
+
+  font-size: var(--dialogHeaderFontSize);
+  color: var(--dialogHeaderColor);
+  line-height: var(--dialogHeaderHeight);
+}
+
+.cc-Dialog-footer {
+  box-sizing: border-box;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--dialogFooterHeight);
+  padding: 8px;
+
+  text-align: center; /* Center buttons */
+}
+
+.cc-Underlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
+  background: rgba(0, 0, 0, 0.5);
 }
