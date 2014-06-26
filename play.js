@@ -19798,9 +19798,73 @@ return jQuery;
 }));
 
 },{}],10:[function(require,module,exports){
+var Growl = module.exports = function(message, options) {
+  options = options || {};
+
+  var container = options.container = options.container || document.getElementById('cc-Growls');
+  options.timeout = options.timeout || 4000;
+
+  this.destroy = this.destroy.bind(this);
+
+  var el = this.el = document.createElement('div');
+  this.el.className = 'cc-Growl'; // No need for u-fades, growl has additional transitions
+  this.el.innerHTML = message;
+
+  // Insert so we can measure stuff
+  options.container.insertBefore(this.el, options.container.firstChild);
+
+  // Compute the margin of a growl
+  var style = window.getComputedStyle(el, null);
+  var margin = parseInt(style.getPropertyValue('margin-top')) + parseInt(style.getPropertyValue('margin-bottom'));
+
+  // Sum the height of everyone in the container
+  var top = 0;
+  for (var i = 1; i < container.children.length; i++) {
+    top += container.children[i].offsetHeight + margin;
+  }
+
+  this.el.style.top = top + 'px';
+  this.el.style.right = 0;
+
+  // Start fading in later so the CSS animation is triggered
+  setTimeout(function() {
+    el.classList.add('u-fadeIn');
+  }, 0);
+
+  // Go away after timeout
+  if (options.timeout) {
+    this.timeout = setTimeout(this.destroy, options.timeout);
+  }
+
+  // Go away if clicked
+  this.el.addEventListener('click', this.destroy);
+};
+
+Growl.prototype.destroy = function() {
+  var self = this;
+  clearTimeout(this.timeout);
+
+  // Start fade
+  this.el.classList.remove('u-fadeIn');
+  this.el.classList.add('u-fadeOut');
+
+  // Animate slide out
+  this.el.style.right = '';
+
+  // Destroy after 0.5s
+  setTimeout(function() {
+    if (self.el && self.el.parentNode) {
+      self.el.parentNode.removeChild(self.el);
+    }
+    self.el = null;
+  }, 500);
+};
+
+},{}],11:[function(require,module,exports){
 var $ = require('jquery');
-var raf = require('./raf.js');
 var CodeMirror = require('codemirror');
+var raf = require('./raf.js');
+var Growl = require('./growl');
 
 // Include modes
 require('codemirror/mode/javascript/javascript');
@@ -19928,7 +19992,7 @@ function init() {
     });
     request.fail(function(jqXHR, textStatus) {
       // Hide next button
-      console.log('This is no next part');
+      console.log('There is no next part');
       els.$nextPartButton.hide();
     });
 
@@ -20115,6 +20179,7 @@ function preloadAudio(url, index) {
 
 function preloadTracks(cb) {
   var toLoad = 0;
+  var totalTracks = 0;
   function handleCanPlay() {
     toLoad--;
     if (toLoad === 0 && typeof cb === 'function') {
@@ -20139,7 +20204,12 @@ function preloadTracks(cb) {
       track._startTime = time;
       track.addEventListener('canplay', handleCanPlay);
       toLoad++;
+      totalTracks++;
     }
+  }
+
+  if (!totalTracks) {
+    cb();
   }
 }
 
@@ -20303,7 +20373,7 @@ function handleEvent(event, index) {
     handleEditorRefresh(data.body);
   }
   else if (name === 'editor.languageChange') {
-    handleLanguageChange(data.language);
+    handleLanguageChange(data.language, user);
   }
   else if (name === 'video.started') {
     handleVideoStarted(index);
@@ -20314,6 +20384,9 @@ function handleEvent(event, index) {
   else if (name === 'video.ended') {
     // @todo #27 hide video
     // setVideoCount();
+  }
+  else if (name === 'collaborator.joined') {
+    handleUserJoined(user);
   }
 }
 
@@ -20341,6 +20414,10 @@ function setVideoCount(count) {
 
   els.videoPanel.className = els.videoPanel.className.replace(/cc-VideoPanel--\d+/g, '');
   els.videoPanel.classList.add('cc-VideoPanel--'+videoCount);
+}
+
+function handleUserJoined(user) {
+  new Growl(user+' has joined.');
 }
 
 function handleVideoStarted(index) {
@@ -20467,12 +20544,18 @@ function handleEditorChange(change) {
   editor.replaceRange(change.text, change.from, change.to);
 }
 
-function handleLanguageChange(language) {
+function handleLanguageChange(language, user) {
   // Switch editor the laguage
   editor.setOption('mode', language);
 
   // Update dropdown
   $('#cc-Language').val(language);
+
+  // Get the label value from the dropdown
+  // @todo use an object map instead
+  var languageLabel = $('#cc-Language option:selected').text();
+
+  new Growl(user+' changed the language to '+languageLabel);
 }
 
 function eachMedia(cb) {
@@ -20531,11 +20614,11 @@ function seekTo(time) {
 
 $(init);
 
-},{"./raf.js":11,"codemirror":1,"codemirror/mode/clike/clike":2,"codemirror/mode/htmlmixed/htmlmixed":4,"codemirror/mode/javascript/javascript":5,"codemirror/mode/python/python":6,"codemirror/mode/ruby/ruby":7,"jquery":9}],11:[function(require,module,exports){
+},{"./growl":10,"./raf.js":12,"codemirror":1,"codemirror/mode/clike/clike":2,"codemirror/mode/htmlmixed/htmlmixed":4,"codemirror/mode/javascript/javascript":5,"codemirror/mode/python/python":6,"codemirror/mode/ruby/ruby":7,"jquery":9}],12:[function(require,module,exports){
 module.exports = 
   window.requestAnimationFrame ||
   window.mozRequestAnimationFrame ||
   window.msRequestAnimationFrame ||
   window.oRequestAnimationFrame ||
   window.webkitRequestAnimationFrame;
-},{}]},{},[10]);
+},{}]},{},[11]);
