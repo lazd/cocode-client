@@ -26,11 +26,9 @@
   var gecko = /gecko\/\d/i.test(navigator.userAgent);
   // ie_uptoN means Internet Explorer version N or lower
   var ie_upto10 = /MSIE \d/.test(navigator.userAgent);
-  var ie_upto7 = ie_upto10 && (document.documentMode == null || document.documentMode < 8);
-  var ie_upto8 = ie_upto10 && (document.documentMode == null || document.documentMode < 9);
-  var ie_upto9 = ie_upto10 && (document.documentMode == null || document.documentMode < 10);
-  var ie_11up = /Trident\/([7-9]|\d{2,})\./.test(navigator.userAgent);
+  var ie_11up = /Trident\/(?:[7-9]|\d{2,})\..*rv:(\d+)/.exec(navigator.userAgent);
   var ie = ie_upto10 || ie_11up;
+  var ie_version = ie && (ie_upto10 ? document.documentMode || 6 : ie_11up[1]);
   var webkit = /WebKit\//.test(navigator.userAgent);
   var qtwebkit = webkit && /Qt\/\d+\.\d+/.test(navigator.userAgent);
   var chrome = /Chrome\//.test(navigator.userAgent);
@@ -51,7 +49,7 @@
   if (presto_version && presto_version >= 15) { presto = false; webkit = true; }
   // Some browsers use the wrong event properties to signal cmd/ctrl on OS X
   var flipCtrlCmd = mac && (qtwebkit || presto && (presto_version == null || presto_version < 12.11));
-  var captureRightClick = gecko || (ie && !ie_upto8);
+  var captureRightClick = gecko || (ie && ie_version >= 9);
 
   // Optimize some code when these features are not used.
   var sawReadOnlySpans = false, sawCollapsedSpans = false;
@@ -94,7 +92,7 @@
 
     // Override magic textarea content restore that IE sometimes does
     // on our hidden textarea on reload
-    if (ie_upto10) setTimeout(bind(resetInput, this, true), 20);
+    if (ie && ie_version < 11) setTimeout(bind(resetInput, this, true), 20);
 
     registerEventHandlers(this);
     ensureGlobalHandlers();
@@ -178,14 +176,14 @@
                             d.scrollbarFiller, d.gutterFiller, d.scroller], "CodeMirror");
 
     // Work around IE7 z-index bug (not perfect, hence IE7 not really being supported)
-    if (ie_upto7) { d.gutters.style.zIndex = -1; d.scroller.style.paddingRight = 0; }
+    if (ie && ie_version < 8) { d.gutters.style.zIndex = -1; d.scroller.style.paddingRight = 0; }
     // Needed to hide big blue blinking cursor on Mobile Safari
     if (ios) input.style.width = "0px";
     if (!webkit) d.scroller.draggable = true;
     // Needed to handle Tab key in KHTML
     if (khtml) { d.inputDiv.style.height = "1px"; d.inputDiv.style.position = "absolute"; }
     // Need to set a minimum width to see the scrollbar on IE7 (but must not set it on IE8).
-    if (ie_upto7) d.scrollbarH.style.minHeight = d.scrollbarV.style.minWidth = "18px";
+    if (ie && ie_version < 8) d.scrollbarH.style.minHeight = d.scrollbarV.style.minWidth = "18px";
 
     if (place.appendChild) place.appendChild(d.wrapper);
     else place(d.wrapper);
@@ -395,6 +393,10 @@
 
   // SCROLLBARS
 
+  function hScrollbarTakesSpace(cm) {
+    return cm.display.scroller.clientHeight - cm.display.wrapper.clientHeight < scrollerCutOff - 3;
+  }
+
   // Prepare DOM reads needed to update the scrollbars. Done in one
   // shot to minimize update/measure roundtrips.
   function measureForScrollbars(cm) {
@@ -403,6 +405,7 @@
       clientHeight: scroll.clientHeight,
       barHeight: cm.display.scrollbarV.clientHeight,
       scrollWidth: scroll.scrollWidth, clientWidth: scroll.clientWidth,
+      hScrollbarTakesSpace: hScrollbarTakesSpace(cm),
       barWidth: cm.display.scrollbarH.clientWidth,
       docHeight: Math.round(cm.doc.height + paddingVert(cm.display))
     };
@@ -412,13 +415,17 @@
   // content.
   function updateScrollbars(cm, measure) {
     if (!measure) measure = measureForScrollbars(cm);
-    var d = cm.display;
+    var d = cm.display, sWidth = scrollbarWidth(d.measure);
     var scrollHeight = measure.docHeight + scrollerCutOff;
     var needsH = measure.scrollWidth > measure.clientWidth;
+    if (needsH && measure.scrollWidth <= measure.clientWidth + 1 &&
+        sWidth > 0 && !measure.hScrollbarTakesSpace)
+      needsH = false; // (Issue #2562)
     var needsV = scrollHeight > measure.clientHeight;
+
     if (needsV) {
       d.scrollbarV.style.display = "block";
-      d.scrollbarV.style.bottom = needsH ? scrollbarWidth(d.measure) + "px" : "0";
+      d.scrollbarV.style.bottom = needsH ? sWidth + "px" : "0";
       // A bug in IE8 can cause this value to be negative, so guard it.
       d.scrollbarV.firstChild.style.height =
         Math.max(0, scrollHeight - measure.clientHeight + (measure.barHeight || d.scrollbarV.clientHeight)) + "px";
@@ -428,7 +435,7 @@
     }
     if (needsH) {
       d.scrollbarH.style.display = "block";
-      d.scrollbarH.style.right = needsV ? scrollbarWidth(d.measure) + "px" : "0";
+      d.scrollbarH.style.right = needsV ? sWidth + "px" : "0";
       d.scrollbarH.firstChild.style.width =
         (measure.scrollWidth - measure.clientWidth + (measure.barWidth || d.scrollbarH.clientWidth)) + "px";
     } else {
@@ -437,16 +444,16 @@
     }
     if (needsH && needsV) {
       d.scrollbarFiller.style.display = "block";
-      d.scrollbarFiller.style.height = d.scrollbarFiller.style.width = scrollbarWidth(d.measure) + "px";
+      d.scrollbarFiller.style.height = d.scrollbarFiller.style.width = sWidth + "px";
     } else d.scrollbarFiller.style.display = "";
     if (needsH && cm.options.coverGutterNextToScrollbar && cm.options.fixedGutter) {
       d.gutterFiller.style.display = "block";
-      d.gutterFiller.style.height = scrollbarWidth(d.measure) + "px";
+      d.gutterFiller.style.height = sWidth + "px";
       d.gutterFiller.style.width = d.gutters.offsetWidth + "px";
     } else d.gutterFiller.style.display = "";
 
     if (!cm.state.checkedOverlayScrollbar && measure.clientHeight > 0) {
-      if (scrollbarWidth(d.measure) === 0) {
+      if (sWidth === 0) {
         var w = mac && !mac_geMountainLion ? "12px" : "18px";
         d.scrollbarV.style.minWidth = d.scrollbarH.style.minHeight = w;
         var barMouseDown = function(e) {
@@ -561,6 +568,10 @@
       updateScrollbars(cm, barMeasure);
       if (webkit && cm.options.lineWrapping)
         checkForWebkitWidthBug(cm, barMeasure); // (Issue #2420)
+      if (webkit && barMeasure.scrollWidth > barMeasure.clientWidth &&
+          barMeasure.scrollWidth < barMeasure.clientWidth + 1 &&
+          !hScrollbarTakesSpace(cm))
+        updateScrollbars(cm); // (Issue #2562)
       if (first && cm.options.lineWrapping && oldWidth != cm.display.scroller.clientWidth) {
         forced = true;
         continue;
@@ -598,6 +609,7 @@
 
     // Bail out if the visible area is already rendered and nothing changed.
     if (!forced && visible.from >= display.viewFrom && visible.to <= display.viewTo &&
+        (display.updateLineNumbers == null || display.updateLineNumbers >= display.viewTo) &&
         countDirtyView(cm) == 0)
       return;
 
@@ -685,7 +697,7 @@
     for (var i = 0; i < display.view.length; i++) {
       var cur = display.view[i], height;
       if (cur.hidden) continue;
-      if (ie_upto7) {
+      if (ie && ie_version < 8) {
         var bot = cur.node.offsetTop + cur.node.offsetHeight;
         height = bot - prevBottom;
         prevBottom = bot;
@@ -794,7 +806,7 @@
       if (lineView.text.parentNode)
         lineView.text.parentNode.replaceChild(lineView.node, lineView.text);
       lineView.node.appendChild(lineView.text);
-      if (ie_upto7) lineView.node.style.zIndex = 2;
+      if (ie && ie_version < 8) lineView.node.style.zIndex = 2;
     }
     return lineView.node;
   }
@@ -1278,7 +1290,7 @@
 
   // Draws a cursor for the given range
   function drawSelectionCursor(cm, range, output) {
-    var pos = cursorCoords(cm, range.head, "div");
+    var pos = cursorCoords(cm, range.head, "div", null, null, !cm.options.singleCursorHeightPerLine);
 
     var cursor = output.appendChild(elt("div", "\u00a0", "CodeMirror-cursor"));
     cursor.style.left = pos.left + "px";
@@ -1380,6 +1392,8 @@
       display.blinker = setInterval(function() {
         display.cursorDiv.style.visibility = (on = !on) ? "" : "hidden";
       }, cm.options.cursorBlinkRate);
+    else if (cm.options.cursorBlinkRate < 0)
+      display.cursorDiv.style.visibility = "hidden";
   }
 
   // HIGHLIGHT WORKER
@@ -1402,9 +1416,11 @@
         var oldStyles = line.styles;
         var highlighted = highlightLine(cm, line, state, true);
         line.styles = highlighted.styles;
-        if (highlighted.classes) line.styleClasses = highlighted.classes;
-        else if (line.styleClasses) line.styleClasses = null;
-        var ischange = !oldStyles || oldStyles.length != line.styles.length;
+        var oldCls = line.styleClasses, newCls = highlighted.classes;
+        if (newCls) line.styleClasses = newCls;
+        else if (oldCls) line.styleClasses = null;
+        var ischange = !oldStyles || oldStyles.length != line.styles.length ||
+          oldCls != newCls && (!oldCls || !newCls || oldCls.bgClass != newCls.bgClass || oldCls.textClass != newCls.textClass);
         for (var i = 0; !ischange && i < oldStyles.length; ++i) ischange = oldStyles[i] != line.styles[i];
         if (ischange) regLineChange(cm, doc.frontier, "text");
         line.stateAfter = copyState(doc.mode, state);
@@ -1560,7 +1576,7 @@
 
   // Given a prepared measurement object, measures the position of an
   // actual character (or fetches it from the cache).
-  function measureCharPrepared(cm, prepared, ch, bias) {
+  function measureCharPrepared(cm, prepared, ch, bias, varHeight) {
     if (prepared.before) ch = -1;
     var key = ch + (bias || ""), found;
     if (prepared.cache.hasOwnProperty(key)) {
@@ -1575,7 +1591,9 @@
       found = measureCharInner(cm, prepared, ch, bias);
       if (!found.bogus) prepared.cache[key] = found;
     }
-    return {left: found.left, right: found.right, top: found.top, bottom: found.bottom};
+    return {left: found.left, right: found.right,
+            top: varHeight ? found.rtop : found.top,
+            bottom: varHeight ? found.rbottom : found.bottom};
   }
 
   var nullRect = {left: 0, right: 0, top: 0, bottom: 0};
@@ -1621,7 +1639,7 @@
     if (node.nodeType == 3) { // If it is a text node, use a range to retrieve the coordinates.
       while (start && isExtendingChar(prepared.line.text.charAt(mStart + start))) --start;
       while (mStart + end < mEnd && isExtendingChar(prepared.line.text.charAt(mStart + end))) ++end;
-      if (ie_upto8 && start == 0 && end == mEnd - mStart) {
+      if (ie && ie_version < 9 && start == 0 && end == mEnd - mStart) {
         rect = node.parentNode.getBoundingClientRect();
       } else if (ie && cm.options.lineWrapping) {
         var rects = range(node, start, end).getClientRects();
@@ -1640,7 +1658,7 @@
       else
         rect = node.getBoundingClientRect();
     }
-    if (ie_upto8 && !start && (!rect || !rect.left && !rect.right)) {
+    if (ie && ie_version < 9 && !start && (!rect || !rect.left && !rect.right)) {
       var rSpan = node.parentNode.getClientRects()[0];
       if (rSpan)
         rect = {left: rSpan.left, right: rSpan.left + charWidth(cm.display), top: rSpan.top, bottom: rSpan.bottom};
@@ -1648,15 +1666,17 @@
         rect = nullRect;
     }
 
-    var top, bot = (rect.bottom + rect.top) / 2 - prepared.rect.top;
+    var rtop = rect.top - prepared.rect.top, rbot = rect.bottom - prepared.rect.top;
+    var mid = (rtop + rbot) / 2;
     var heights = prepared.view.measure.heights;
     for (var i = 0; i < heights.length - 1; i++)
-      if (bot < heights[i]) break;
-    top = i ? heights[i - 1] : 0; bot = heights[i];
+      if (mid < heights[i]) break;
+    var top = i ? heights[i - 1] : 0, bot = heights[i];
     var result = {left: (collapse == "right" ? rect.right : rect.left) - prepared.rect.left,
                   right: (collapse == "left" ? rect.left : rect.right) - prepared.rect.left,
                   top: top, bottom: bot};
     if (!rect.left && !rect.right) result.bogus = true;
+    if (!cm.options.singleCursorHeightPerLine) { result.rtop = rtop; result.rbottom = rbot; }
     return result;
   }
 
@@ -1736,11 +1756,11 @@
   // Returns a box for a given cursor position, which may have an
   // 'other' property containing the position of the secondary cursor
   // on a bidi boundary.
-  function cursorCoords(cm, pos, context, lineObj, preparedMeasure) {
+  function cursorCoords(cm, pos, context, lineObj, preparedMeasure, varHeight) {
     lineObj = lineObj || getLine(cm.doc, pos.line);
     if (!preparedMeasure) preparedMeasure = prepareMeasureForLine(cm, lineObj);
     function get(ch, right) {
-      var m = measureCharPrepared(cm, preparedMeasure, ch, right ? "right" : "left");
+      var m = measureCharPrepared(cm, preparedMeasure, ch, right ? "right" : "left", varHeight);
       if (right) m.left = m.right; else m.right = m.left;
       return intoCoordSystem(cm, lineObj, m, context);
     }
@@ -2251,7 +2271,7 @@
     // If nothing changed, bail.
     if (text == prevInput && !cm.somethingSelected()) return false;
     // Work around nonsensical selection resetting in IE9/10
-    if (ie && !ie_upto8 && cm.display.inputHasSelection === text) {
+    if (ie && ie_version >= 9 && cm.display.inputHasSelection === text) {
       resetInput(cm);
       return false;
     }
@@ -2327,10 +2347,10 @@
       var content = minimal ? "-" : selected || cm.getSelection();
       cm.display.input.value = content;
       if (cm.state.focused) selectInput(cm.display.input);
-      if (ie && !ie_upto8) cm.display.inputHasSelection = content;
+      if (ie && ie_version >= 9) cm.display.inputHasSelection = content;
     } else if (!typing) {
       cm.display.prevInput = cm.display.input.value = "";
-      if (ie && !ie_upto8) cm.display.inputHasSelection = null;
+      if (ie && ie_version >= 9) cm.display.inputHasSelection = null;
     }
     cm.display.inaccurateSelection = minimal;
   }
@@ -2355,7 +2375,7 @@
     var d = cm.display;
     on(d.scroller, "mousedown", operation(cm, onMouseDown));
     // Older IE's will not fire a second mousedown for a double click
-    if (ie_upto10)
+    if (ie && ie_version < 11)
       on(d.scroller, "dblclick", operation(cm, function(e) {
         if (signalDOMEvent(cm, e)) return;
         var pos = posFromMouse(cm, e);
@@ -2404,7 +2424,7 @@
 
     on(d.input, "keyup", operation(cm, onKeyUp));
     on(d.input, "input", function() {
-      if (ie && !ie_upto8 && cm.display.inputHasSelection) cm.display.inputHasSelection = null;
+      if (ie && ie_version >= 9 && cm.display.inputHasSelection) cm.display.inputHasSelection = null;
       fastPoll(cm);
     });
     on(d.input, "keydown", operation(cm, onKeyDown));
@@ -2434,8 +2454,12 @@
       if (webkit && !cm.state.fakedLastChar && !(new Date - cm.state.lastMiddleDown < 200)) {
         var start = d.input.selectionStart, end = d.input.selectionEnd;
         d.input.value += "$";
-        d.input.selectionStart = start;
+        // The selection end needs to be set before the start, otherwise there
+        // can be an intermediate non-empty selection between the two, which
+        // can override the middle-click paste buffer on linux and cause the
+        // wrong thing to get pasted.
         d.input.selectionEnd = end;
+        d.input.selectionStart = start;
         cm.state.fakedLastChar = true;
       }
       cm.state.pasteIncoming = true;
@@ -2599,7 +2623,7 @@
           extendSelection(cm.doc, start);
         focusInput(cm);
         // Work around unexplainable focus problem in IE9 (#2127)
-        if (ie_upto10 && !ie_upto8)
+        if (ie && ie_version == 9)
           setTimeout(function() {document.body.focus(); focusInput(cm);}, 20);
       }
     });
@@ -2742,7 +2766,7 @@
     }
 
     var move = operation(cm, function(e) {
-      if ((ie && !ie_upto9) ?  !e.buttons : !e_button(e)) done(e);
+      if (!e_button(e)) done(e);
       else extend(e);
     });
     var up = operation(cm, done);
@@ -3059,7 +3083,7 @@
     ensureFocus(cm);
     if (signalDOMEvent(cm, e)) return;
     // IE does strange things with escape.
-    if (ie_upto10 && e.keyCode == 27) e.returnValue = false;
+    if (ie && ie_version < 11 && e.keyCode == 27) e.returnValue = false;
     var code = e.keyCode;
     cm.display.shift = code == 16 || e.shiftKey;
     var handled = handleKeyBinding(cm, e);
@@ -3097,13 +3121,13 @@
 
   function onKeyPress(e) {
     var cm = this;
-    if (signalDOMEvent(cm, e)) return;
+    if (signalDOMEvent(cm, e) || e.ctrlKey || mac && e.metaKey) return;
     var keyCode = e.keyCode, charCode = e.charCode;
     if (presto && keyCode == lastStoppedKey) {lastStoppedKey = null; e_preventDefault(e); return;}
     if (((presto && (!e.which || e.which < 10)) || khtml) && handleKeyBinding(cm, e)) return;
     var ch = String.fromCharCode(charCode == null ? keyCode : charCode);
     if (handleCharBinding(cm, e, ch)) return;
-    if (ie && !ie_upto8) cm.display.inputHasSelection = null;
+    if (ie && ie_version >= 9) cm.display.inputHasSelection = null;
     fastPoll(cm);
   }
 
@@ -3185,12 +3209,12 @@
     function rehide() {
       display.inputDiv.style.position = "relative";
       display.input.style.cssText = oldCSS;
-      if (ie_upto8) display.scrollbarV.scrollTop = display.scroller.scrollTop = scrollPos;
+      if (ie && ie_version < 9) display.scrollbarV.scrollTop = display.scroller.scrollTop = scrollPos;
       slowPoll(cm);
 
       // Try to detect the user choosing select-all
       if (display.input.selectionStart != null) {
-        if (!ie || ie_upto8) prepareSelectAllHack();
+        if (!ie || (ie && ie_version < 9)) prepareSelectAllHack();
         var i = 0, poll = function() {
           if (display.selForContextMenu == cm.doc.sel && display.input.selectionStart == 0)
             operation(cm, commands.selectAll)(cm);
@@ -3201,7 +3225,7 @@
       }
     }
 
-    if (ie && !ie_upto8) prepareSelectAllHack();
+    if (ie && ie_version >= 9) prepareSelectAllHack();
     if (captureRightClick) {
       e_stop(e);
       var mouseup = function() {
@@ -3712,12 +3736,12 @@
   // Utility for applying a change to a line by handle or number,
   // returning the number and optionally registering the line as
   // changed.
-  function changeLine(cm, handle, changeType, op) {
-    var no = handle, line = handle, doc = cm.doc;
+  function changeLine(doc, handle, changeType, op) {
+    var no = handle, line = handle;
     if (typeof handle == "number") line = getLine(doc, clipLine(doc, handle));
     else no = lineNo(handle);
     if (no == null) return null;
-    if (op(line, no)) regLineChange(cm, no, changeType);
+    if (op(line, no) && doc.cm) regLineChange(doc.cm, no, changeType);
     return line;
   }
 
@@ -4032,7 +4056,7 @@
     defaultCharWidth: function() { return charWidth(this.display); },
 
     setGutterMarker: methodOp(function(line, gutterID, value) {
-      return changeLine(this, line, "gutter", function(line) {
+      return changeLine(this.doc, line, "gutter", function(line) {
         var markers = line.gutterMarkers || (line.gutterMarkers = {});
         markers[gutterID] = value;
         if (!value && isEmpty(markers)) line.gutterMarkers = null;
@@ -4049,32 +4073,6 @@
           if (isEmpty(line.gutterMarkers)) line.gutterMarkers = null;
         }
         ++i;
-      });
-    }),
-
-    addLineClass: methodOp(function(handle, where, cls) {
-      return changeLine(this, handle, "class", function(line) {
-        var prop = where == "text" ? "textClass" : where == "background" ? "bgClass" : "wrapClass";
-        if (!line[prop]) line[prop] = cls;
-        else if (new RegExp("(?:^|\\s)" + cls + "(?:$|\\s)").test(line[prop])) return false;
-        else line[prop] += " " + cls;
-        return true;
-      });
-    }),
-
-    removeLineClass: methodOp(function(handle, where, cls) {
-      return changeLine(this, handle, "class", function(line) {
-        var prop = where == "text" ? "textClass" : where == "background" ? "bgClass" : "wrapClass";
-        var cur = line[prop];
-        if (!cur) return false;
-        else if (cls == null) line[prop] = null;
-        else {
-          var found = cur.match(new RegExp("(?:^|\\s+)" + cls + "(?:$|\\s+)"));
-          if (!found) return false;
-          var end = found.index + found[0].length;
-          line[prop] = cur.slice(0, found.index) + (!found.index || end == cur.length ? "" : " ") + cur.slice(end) || null;
-        }
-        return true;
       });
     }),
 
@@ -4253,14 +4251,21 @@
     }),
 
     setSize: methodOp(function(width, height) {
+      var cm = this;
       function interpret(val) {
         return typeof val == "number" || /^\d+$/.test(String(val)) ? val + "px" : val;
       }
-      if (width != null) this.display.wrapper.style.width = interpret(width);
-      if (height != null) this.display.wrapper.style.height = interpret(height);
-      if (this.options.lineWrapping) clearLineMeasurementCache(this);
-      this.curOp.forceUpdate = true;
-      signal(this, "refresh", this);
+      if (width != null) cm.display.wrapper.style.width = interpret(width);
+      if (height != null) cm.display.wrapper.style.height = interpret(height);
+      if (cm.options.lineWrapping) clearLineMeasurementCache(this);
+      var lineNo = cm.display.viewFrom;
+      cm.doc.iter(lineNo, cm.display.viewTo, function(line) {
+        if (line.widgets) for (var i = 0; i < line.widgets.length; i++)
+          if (line.widgets[i].noHScroll) { regLineChange(cm, lineNo, "widget"); break; }
+        ++lineNo;
+      });
+      cm.curOp.forceUpdate = true;
+      signal(cm, "refresh", this);
     }),
 
     operation: function(f){return runInOp(this, f);},
@@ -4380,7 +4385,8 @@
 
   option("cursorBlinkRate", 530);
   option("cursorScrollMargin", 0);
-  option("cursorHeight", 1);
+  option("cursorHeight", 1, updateSelection, true);
+  option("singleCursorHeightPerLine", true, updateSelection, true);
   option("workTime", 100);
   option("workDelay", 100);
   option("flattenSpans", true, resetModeState, true);
@@ -4570,7 +4576,8 @@
     goDocStart: function(cm) {cm.extendSelection(Pos(cm.firstLine(), 0));},
     goDocEnd: function(cm) {cm.extendSelection(Pos(cm.lastLine()));},
     goLineStart: function(cm) {
-      cm.extendSelectionsBy(function(range) { return lineStart(cm, range.head.line); }, sel_move);
+      cm.extendSelectionsBy(function(range) { return lineStart(cm, range.head.line); },
+                            {origin: "+move", bias: 1});
     },
     goLineStartSmart: function(cm) {
       cm.extendSelectionsBy(function(range) {
@@ -4583,10 +4590,11 @@
           return Pos(start.line, inWS ? 0 : firstNonWS);
         }
         return start;
-      }, sel_move);
+      }, {origin: "+move", bias: 1});
     },
     goLineEnd: function(cm) {
-      cm.extendSelectionsBy(function(range) { return lineEnd(cm, range.head.line); }, sel_move);
+      cm.extendSelectionsBy(function(range) { return lineEnd(cm, range.head.line); },
+                            {origin: "+move", bias: -1});
     },
     goLineRight: function(cm) {
       cm.extendSelectionsBy(function(range) {
@@ -5418,8 +5426,8 @@
       var fromCmp = cmp(found.from, from) || extraLeft(sp.marker) - extraLeft(marker);
       var toCmp = cmp(found.to, to) || extraRight(sp.marker) - extraRight(marker);
       if (fromCmp >= 0 && toCmp <= 0 || fromCmp <= 0 && toCmp >= 0) continue;
-      if (fromCmp <= 0 && (cmp(found.to, from) || extraRight(sp.marker) - extraLeft(marker)) > 0 ||
-          fromCmp >= 0 && (cmp(found.from, to) || extraLeft(sp.marker) - extraRight(marker)) < 0)
+      if (fromCmp <= 0 && (cmp(found.to, from) > 0 || (sp.marker.inclusiveRight && marker.inclusiveLeft)) ||
+          fromCmp >= 0 && (cmp(found.from, to) < 0 || (sp.marker.inclusiveLeft && marker.inclusiveRight)))
         return true;
     }
   }
@@ -5537,15 +5545,19 @@
 
   function widgetHeight(widget) {
     if (widget.height != null) return widget.height;
-    if (!contains(document.body, widget.node))
-      removeChildrenAndAdd(widget.cm.display.measure, elt("div", [widget.node], null, "position: relative"));
+    if (!contains(document.body, widget.node)) {
+      var parentStyle = "position: relative;";
+      if (widget.coverGutter)
+        parentStyle += "margin-left: -" + widget.cm.getGutterElement().offsetWidth + "px;";
+      removeChildrenAndAdd(widget.cm.display.measure, elt("div", [widget.node], null, parentStyle));
+    }
     return widget.height = widget.node.offsetHeight;
   }
 
   function addLineWidget(cm, handle, node, options) {
     var widget = new LineWidget(cm, node, options);
     if (widget.noHScroll) cm.display.alignWidgets = true;
-    changeLine(cm, handle, "widget", function(line) {
+    changeLine(cm.doc, handle, "widget", function(line) {
       var widgets = line.widgets || (line.widgets = []);
       if (widget.insertAt == null) widgets.push(widget);
       else widgets.splice(Math.min(widgets.length - 1, Math.max(0, widget.insertAt)), 0, widget);
@@ -5801,7 +5813,7 @@
       builder.col += text.length;
       var content = document.createTextNode(text);
       builder.map.push(builder.pos, builder.pos + text.length, content);
-      if (ie_upto8) mustWrap = true;
+      if (ie && ie_version < 9) mustWrap = true;
       builder.pos += text.length;
     } else {
       var content = document.createDocumentFragment(), pos = 0;
@@ -5811,7 +5823,7 @@
         var skipped = m ? m.index - pos : text.length - pos;
         if (skipped) {
           var txt = document.createTextNode(text.slice(pos, pos + skipped));
-          if (ie_upto8) content.appendChild(elt("span", [txt]));
+          if (ie && ie_version < 9) content.appendChild(elt("span", [txt]));
           else content.appendChild(txt);
           builder.map.push(builder.pos, builder.pos + skipped, txt);
           builder.col += skipped;
@@ -5825,7 +5837,7 @@
           builder.col += tabWidth;
         } else {
           var txt = builder.cm.options.specialCharPlaceholder(m[0]);
-          if (ie_upto8) content.appendChild(elt("span", [txt]));
+          if (ie && ie_version < 9) content.appendChild(elt("span", [txt]));
           else content.appendChild(txt);
           builder.col += 1;
         }
@@ -6349,6 +6361,31 @@
       hist.done = copyHistoryArray(histData.done.slice(0), null, true);
       hist.undone = copyHistoryArray(histData.undone.slice(0), null, true);
     },
+
+    addLineClass: docMethodOp(function(handle, where, cls) {
+      return changeLine(this, handle, "class", function(line) {
+        var prop = where == "text" ? "textClass" : where == "background" ? "bgClass" : "wrapClass";
+        if (!line[prop]) line[prop] = cls;
+        else if (new RegExp("(?:^|\\s)" + cls + "(?:$|\\s)").test(line[prop])) return false;
+        else line[prop] += " " + cls;
+        return true;
+      });
+    }),
+    removeLineClass: docMethodOp(function(handle, where, cls) {
+      return changeLine(this, handle, "class", function(line) {
+        var prop = where == "text" ? "textClass" : where == "background" ? "bgClass" : "wrapClass";
+        var cur = line[prop];
+        if (!cur) return false;
+        else if (cls == null) line[prop] = null;
+        else {
+          var found = cur.match(new RegExp("(?:^|\\s+)" + cls + "(?:$|\\s+)"));
+          if (!found) return false;
+          var end = found.index + found[0].length;
+          line[prop] = cur.slice(0, found.index) + (!found.index || end == cur.length ? "" : " ") + cur.slice(end) || null;
+        }
+        return true;
+      });
+    }),
 
     markText: function(from, to, options) {
       return markText(this, clipPos(this, from), clipPos(this, to), options, "range");
@@ -7157,7 +7194,7 @@
   function activeElt() { return document.activeElement; }
   // Older versions of IE throws unspecified error when touching
   // document.activeElement in some cases (during loading, in iframe)
-  if (ie_upto10) activeElt = function() {
+  if (ie && ie_version < 11) activeElt = function() {
     try { return document.activeElement; }
     catch(e) { return document.body; }
   };
@@ -7220,7 +7257,7 @@
   var dragAndDrop = function() {
     // There is *some* kind of drag-and-drop support in IE6-8, but I
     // couldn't get it to work yet.
-    if (ie_upto8) return false;
+    if (ie && ie_version < 9) return false;
     var div = elt('div');
     return "draggable" in div || "dragDrop" in div;
   }();
@@ -7241,7 +7278,7 @@
       var test = elt("span", "\u200b");
       removeChildrenAndAdd(measure, elt("span", [test, document.createTextNode("x")]));
       if (measure.firstChild.offsetHeight != 0)
-        zwspSupported = test.offsetWidth <= 1 && test.offsetHeight > 2 && !ie_upto7;
+        zwspSupported = test.offsetWidth <= 1 && test.offsetHeight > 2 && !(ie && ie_version < 8);
     }
     if (zwspSupported) return elt("span", "\u200b");
     else return elt("span", "\u00a0", null, "display: inline-block; width: 1px; margin-right: -1px");
@@ -7596,7 +7633,7 @@
 
   // THE END
 
-  CodeMirror.version = "4.2.0";
+  CodeMirror.version = "4.3.0";
 
   return CodeMirror;
 });
@@ -7811,7 +7848,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     stream.backUp(1);
     // Raw strings.
     if (stream.match(/(R|u8R|uR|UR|LR)/)) {
-      var match = stream.match(/"(.{0,16})\(/);
+      var match = stream.match(/"([^\s\\()]{0,16})\(/);
       if (!match) {
         return false;
       }
@@ -7846,13 +7883,13 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
   // C++11 raw string literal is <prefix>"<delim>( anything )<delim>", where
   // <delim> can be a string up to 16 characters long.
   function tokenRawString(stream, state) {
-    var closingSequence = new RegExp(".*?\\)" + state.cpp11RawStringDelim + '"');
-    var match = stream.match(closingSequence);
-    if (match) {
+    // Escape characters that have special regex meanings.
+    var delim = state.cpp11RawStringDelim.replace(/[^\w\s]/g, '\\$&');
+    var match = stream.match(new RegExp(".*?\\)" + delim + '"'));
+    if (match)
       state.tokenize = null;
-    } else {
+    else
       stream.skipToEnd();
-    }
     return "string";
   }
 
@@ -8536,8 +8573,8 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
     "navajowhite", "navy", "oldlace", "olive", "olivedrab", "orange", "orangered",
     "orchid", "palegoldenrod", "palegreen", "paleturquoise", "palevioletred",
     "papayawhip", "peachpuff", "peru", "pink", "plum", "powderblue",
-    "purple", "red", "rosybrown", "royalblue", "saddlebrown", "salmon",
-    "sandybrown", "seagreen", "seashell", "sienna", "silver", "skyblue",
+    "purple", "rebeccapurple", "red", "rosybrown", "royalblue", "saddlebrown",
+    "salmon", "sandybrown", "seagreen", "seashell", "sienna", "silver", "skyblue",
     "slateblue", "slategray", "snow", "springgreen", "steelblue", "tan",
     "teal", "thistle", "tomato", "turquoise", "violet", "wheat", "white",
     "whitesmoke", "yellow", "yellowgreen"
@@ -8704,7 +8741,7 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
         }
       },
       ":": function(stream) {
-        if (stream.match(/\s*{/))
+        if (stream.match(/\s*\{/))
           return [null, "{"];
         return false;
       },
@@ -9124,7 +9161,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     var cc = state.cc;
     // Communicate our context to the combinators.
     // (Less wasteful than consing up a hundred closures on every call.)
-    cx.state = state; cx.stream = stream; cx.marked = null, cx.cc = cc;
+    cx.state = state; cx.stream = stream; cx.marked = null, cx.cc = cc; cx.style = style;
 
     if (!state.lexical.hasOwnProperty("align"))
       state.lexical.align = true;
@@ -9229,7 +9266,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     if (type == "catch") return cont(pushlex("form"), pushcontext, expect("("), funarg, expect(")"),
                                      statement, poplex, popcontext);
     if (type == "module") return cont(pushlex("form"), pushcontext, afterModule, popcontext, poplex);
-    if (type == "class") return cont(pushlex("form"), className, objlit, poplex);
+    if (type == "class") return cont(pushlex("form"), className, poplex);
     if (type == "export") return cont(pushlex("form"), afterExport, poplex);
     if (type == "import") return cont(pushlex("form"), afterImport, poplex);
     return pass(pushlex("stat"), expression, expect(";"), poplex);
@@ -9316,15 +9353,18 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     if (type == "variable") {cx.marked = "property"; return cont();}
   }
   function objprop(type, value) {
-    if (type == "variable") {
+    if (type == "variable" || cx.style == "keyword") {
       cx.marked = "property";
       if (value == "get" || value == "set") return cont(getterSetter);
+      return cont(afterprop);
     } else if (type == "number" || type == "string") {
-      cx.marked = jsonldMode ? "property" : (type + " property");
+      cx.marked = jsonldMode ? "property" : (cx.style + " property");
+      return cont(afterprop);
+    } else if (type == "jsonld-keyword") {
+      return cont(afterprop);
     } else if (type == "[") {
       return cont(expression, expect("]"), afterprop);
     }
-    if (atomicTypes.hasOwnProperty(type)) return cont(afterprop);
   }
   function getterSetter(type) {
     if (type != "variable") return pass(afterprop);
@@ -9423,11 +9463,27 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
   function className(type, value) {
     if (type == "variable") {register(value); return cont(classNameAfter);}
   }
-  function classNameAfter(_type, value) {
-    if (value == "extends") return cont(expression);
+  function classNameAfter(type, value) {
+    if (value == "extends") return cont(expression, classNameAfter);
+    if (type == "{") return cont(pushlex("}"), classBody, poplex);
   }
-  function objlit(type) {
-    if (type == "{") return contCommasep(objprop, "}");
+  function classBody(type, value) {
+    if (type == "variable" || cx.style == "keyword") {
+      cx.marked = "property";
+      if (value == "get" || value == "set") return cont(classGetterSetter, functiondef, classBody);
+      return cont(functiondef, classBody);
+    }
+    if (value == "*") {
+      cx.marked = "keyword";
+      return cont(classBody);
+    }
+    if (type == ";") return cont(classBody);
+    if (type == "}") return cont();
+  }
+  function classGetterSetter(type) {
+    if (type != "variable") return pass();
+    cx.marked = "property";
+    return cont();
   }
   function afterModule(type, value) {
     if (type == "string") return cont(statement);
@@ -9539,6 +9595,7 @@ CodeMirror.registerHelper("wordChars", "javascript", /[\\w$]/);
 CodeMirror.defineMIME("text/javascript", "javascript");
 CodeMirror.defineMIME("text/ecmascript", "javascript");
 CodeMirror.defineMIME("application/javascript", "javascript");
+CodeMirror.defineMIME("application/x-javascript", "javascript");
 CodeMirror.defineMIME("application/ecmascript", "javascript");
 CodeMirror.defineMIME("application/json", {name: "javascript", json: true});
 CodeMirror.defineMIME("application/x-json", {name: "javascript", json: true});
@@ -9871,8 +9928,10 @@ CodeMirror.defineMIME("application/typescript", { name: "javascript", typescript
         var closing = textAfter && textAfter.charAt(0) == scope.type;
         if (scope.align != null)
           return scope.align - (closing ? 1 : 0);
+        else if (closing && state.scopes.length > 1)
+          return state.scopes[state.scopes.length - 2].offset;
         else
-          return scope.offset - (closing ? conf.indentUnit : 0);
+          return scope.offset;
       },
 
       lineComment: "#",
@@ -20479,4 +20538,4 @@ module.exports =
   window.msRequestAnimationFrame ||
   window.oRequestAnimationFrame ||
   window.webkitRequestAnimationFrame;
-},{}]},{},[10])
+},{}]},{},[10]);

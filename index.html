@@ -11,6 +11,26 @@
         <link href="index.css" rel="stylesheet">
     </head>
     <body>
+        <div class="cc-Underlay" id="cc-Underlay" style="display: none;"></div>
+        <form id="cc-CreateRoom" class="cc-Dialog" style="display: none;">
+            <div class="cc-Dialog-header">Start Interview</div>
+            <div class="cc-Dialog-body">
+                <dl class="cc-Fields">
+                    <label>
+                        <dt>Your Name</dt>
+                        <dd><input class="cc-Input" id="cc-CreateRoom-interviewerName" type="text"></dd>
+                    </label>
+                    <label>
+                        <dt>Candidate Name</dt>
+                        <dd><input class="cc-Input" id="cc-CreateRoom-candidateName" type="text"></dd>
+                    </label>
+                </dl>
+            </div>
+            <div class="cc-Dialog-footer">
+                <button class="cc-Button cc-Button--blue" type="submit">Create Room</button>
+            </div>
+        </form>
+
         <div class="cc-Header">
             <div class="cc-Header-column">
                 <img class="cc-Logo" src="images/logo.png" alt="CoTrain">
@@ -19,17 +39,11 @@
             <div class="cc-Header-column cc-Header-column--center cc-Header-column--wide">
                 
                 <h1 class="cc-Header-h1">
-                    <a class="cc-JoinLink" href="#"><i class="icon-link cc-IconButton u-hidden" id="cc-JoinLink"></i><span id="cc-RoomName"></span></a>
+                    <a class="cc-JoinLink" target="_blank" id="cc-JoinLink" href="#"><i class="icon-link cc-IconButton"></i><span id="cc-RoomName"></span></a>
                 </h1>
 
                 <h2 class="cc-Header-h2" id="cc-SubTitle"></h2>
-
-                <form id="cc-CreateRoom" style="display: none;">
-                    <input class="cc-Input" id="cc-CreateRoom-roomName" type="text">
-                    <button class="cc-Button cc-Button--blue" type="submit">Create Room</button>
-                </form>
             </div>
-
 
             <div class="cc-Header-column cc-Header-column--right">
                 <select class="cc-Button cc-Button--blue" id="cc-Language">
@@ -44,7 +58,7 @@
         </div>
 
         <div class="cc-Interview">
-            <div class="cc-Interview-component" id="cc-EditorComponent">
+            <div class="cc-Interview-component" id="cc-EditorComponent" style="display: none;">
                 <textarea id="cc-Code"></textarea>
             </div>
         </div>
