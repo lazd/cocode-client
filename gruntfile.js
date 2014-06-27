@@ -6,6 +6,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-symlink');
+  grunt.loadNpmTasks('grunt-contrib-concat');
 
   var reworkPlugins = [
     require('rework-import')({
@@ -33,6 +34,10 @@ module.exports = function(grunt) {
     'images/*'
   ];
 
+  var libs = [
+    'source/lib/RecordRTC.js'
+  ];
+console.log(libs.concat(['build/index.js']));
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     clean: {
@@ -41,6 +46,13 @@ module.exports = function(grunt) {
         'build/**/*',
         '!build/results/**'
       ]
+    },
+    concat: {
+      libs: {
+        files: {
+          'build/index.js': libs.concat(['build/index.js'])
+        }
+      }
     },
     browserify: {
       options: {},
@@ -130,6 +142,10 @@ module.exports = function(grunt) {
       css: {
         files: 'source/css/**/*.css',
         tasks: ['rework:dev']
+      },
+      output: {
+        files: 'build/index.js',
+        tasks: ['concat:libs']
       }
     }
   });
@@ -142,10 +158,10 @@ module.exports = function(grunt) {
   grunt.registerTask('build-prod-before', ['build-common', 'rework:prod']);
 
   // Build types
-  grunt.registerTask('build-dev', ['build-dev-before', 'browserify:dev']);
-  grunt.registerTask('build-prod', ['build-prod-before', 'browserify:prod', 'uglify:prod']);
+  grunt.registerTask('build-dev', ['build-dev-before', 'browserify:dev', 'concat:libs']);
+  grunt.registerTask('build-prod', ['build-prod-before', 'browserify:prod', 'concat:libs', 'uglify:prod']);
 
   // Default task - Build and watch in dev mode
   // Don't do a full dev build, browserify:watch will handle it
-  grunt.registerTask('default', ['build-dev-before', 'browserify:watch', 'watch']);
+  grunt.registerTask('default', ['build-dev-before', 'browserify:watch', 'concat:libs', 'watch']);
 };

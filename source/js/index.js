@@ -294,6 +294,7 @@ function init() {
           user: ourUser,
           part: ++audioRecorder.part
         });
+        window.audioRecorder = audioRecorder;
       }
     }
   });
