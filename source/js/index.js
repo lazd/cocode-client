@@ -471,6 +471,9 @@ function init() {
   $('#cc-Language').on('change', function(event) {
     var language = event.currentTarget.value;
 
+    // Send the current language
+    webrtc.sendDirectlyToAll('simplewebrtc', 'changeLanguage', language);
+
     setLanguage(language, ourUser);
   });
 
