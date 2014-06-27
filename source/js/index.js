@@ -487,6 +487,9 @@ function init() {
     var interviewerName = $('#cc-CreateRoom-interviewerName').val();
     var candidateName = $('#cc-CreateRoom-candidateName').val();
 
+    // Mark that we're the interviewer
+    isInterviewer = true;
+
     // Store room name and candidate URL
     room = sanitizeRoomName(interviewerName+'-'+candidateName);
     candidateURL = '?'+candidateName+'@'+room;
