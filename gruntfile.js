@@ -55,7 +55,9 @@ console.log(libs.concat(['build/index.js']));
       }
     },
     browserify: {
-      options: {},
+      options: {
+        transform: ['hbsfy']
+      },
       dev: {
         options: {
           bundleOptions: {
