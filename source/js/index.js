@@ -294,7 +294,6 @@ function init() {
           user: ourUser,
           part: ++audioRecorder.part
         });
-        window.audioRecorder = audioRecorder;
       }
     }
   });
@@ -461,7 +460,7 @@ function init() {
 
   $(document.body).on('click', '.js-downloadSession', function(event) {
     event.preventDefault();
-    downloadSession();
+    startSessionUpload();
   });
 
   $(document.body).on('click', '.js-runCode', function(event) {
@@ -646,10 +645,6 @@ function init() {
     }
   }
 
-  function downloadAndResume() {
-    downloadRecordings(restartRecordings);
-  }
-
   function restartRecordings() {
     // Start peer recording
     webrtc.webrtc.peers.forEach(function(peer) {
@@ -692,15 +687,41 @@ function init() {
     }
   }
 
-  function downloadRecordings(cb) {
-    var toDownload = 0;
-    var allDownloadsStarted = false;
+  function uploadSession(cb) {
+    // The number of tracks left to queue
+    var toQueue = 0;
 
-    function handleDownloadComplete() {
-      toDownload--;
-      if (toDownload === 0 && allDownloadsStarted) {
+    // Whether all the recorders have been stopped
+    var allRecordersStopped = false;
+
+    // Hold tracks to upload
+    var tracks = [];
+
+    // Build the session JSON
+    var session = {
+      log: log,
+      questions: questions,
+      name: room,
+      duration: getTime()
+    };
+
+    // Add the session JSON to the data instance
+    tracks.push({
+      type: 'json',
+      name: 'interview.'+(++part),
+      blob: new Blob(JSON.stringify(session).split(''), { type: 'application/json'})
+    });
+
+    // Called when a track is finished recording
+    function handleTrackReady(track) {
+      tracks.push(track);
+
+      toQueue--;
+      if (toQueue === 0 && allRecordersStopped) {
         if (typeof cb === 'function') {
-          console.error('Downloads complete');
+          // Start the upload
+          console.log('Tracks ready for upload...');
+          doUpload(tracks);
           cb();
         }
       }
@@ -708,41 +729,54 @@ function init() {
 
     // Iterate over each peer
     webrtc.webrtc.peers.forEach(function(peer) {
-      // Download their audio and video
+      // Queue their audio and video
       if (peer.audioRecorder) {
         track('audio.stopped', {
           user: peer.user
         });
 
-        toDownload++;
+        toQueue++;
         peer.audioRecorder.stopRecording(function(url) {
-          downloadAudio(url, peer.user+'.'+peer.audioRecorder.part);
-          handleDownloadComplete();
+          // downloadAudio(url, peer.user+'.'+peer.audioRecorder.part);
+          handleTrackReady({
+            type: 'audio',
+            name: peer.user+'.'+peer.audioRecorder.part,
+            blob: peer.audioRecorder.getBlob()
+          });
         });
       }
+
       if (peer.videoRecorder) {
         track('video.stopped', {
           user: peer.user
         });
 
-        toDownload++;
+        toQueue++;
         peer.videoRecorder.stopRecording(function(url) {
-          downloadVideo(url, peer.user+'.'+peer.videoRecorder.part);
-          handleDownloadComplete();
+          // downloadVideo(url, peer.user+'.'+peer.videoRecorder.part);
+          handleTrackReady({
+            type: 'video',
+            name: peer.user+'.'+peer.videoRecorder.part,
+            blob: peer.videoRecorder.getBlob()
+          });
         });
       }
     });
 
-    // Download our audio and video
+    // Queue our audio and video
     if (audioRecorder) {
       track('audio.stopped', {
         user: ourUser
       });
 
-      toDownload++;
+      toQueue++;
       audioRecorder.stopRecording(function(url) {
-        downloadAudio(url, ourUser+'.'+audioRecorder.part);
-        handleDownloadComplete();
+        // downloadAudio(url, ourUser+'.'+audioRecorder.part);
+        handleTrackReady({
+          type: 'audio',
+          name: ourUser+'.'+audioRecorder.part,
+          blob: audioRecorder.getBlob()
+        });
       });
     }
 
@@ -751,26 +785,18 @@ function init() {
         user: ourUser
       });
 
-      toDownload++;
+      toQueue++;
       videoRecorder.stopRecording(function(url) {
-        downloadVideo(url, ourUser+'.'+videoRecorder.part);
-        handleDownloadComplete();
+        // downloadVideo(url, ourUser+'.'+videoRecorder.part);
+        handleTrackReady({
+          type: 'video',
+          name: ourUser+'.'+videoRecorder.part,
+          blob: videoRecorder.getBlob()
+        });
       });
     }
 
-    allDownloadsStarted = true;
-
-    // Download saved tracks
-    if (trackURLs.length) {
-      toDownload += trackURLs.length
-
-      // Download all saved tracks
-      trackURLs.forEach(downloadTrack);
-      handleDownloadComplete();
-
-      // Free up some memory by removing references to URLs
-      trackURLs = [];
-    }
+    allRecordersStopped = true;
   }
 
   function downloadTrack(track) {
@@ -816,38 +842,12 @@ function init() {
     downloadURL(url, name+'.audio.wav');
   }
 
-  function dataURItoBlob(dataURI, type) {
-    var array = [];
-    for(var i = 0; i < dataURI.length; i++) {
-      array.push(dataURI.charCodeAt(i));
-    }
-    return new Blob([new Uint8Array(array)], { type: type });
-  }
-
   var part = 0;
-  function downloadSession() {
+  function startSessionUpload() {
     track('sessionEnded');
 
-    var session = {
-      log: log,
-      questions: questions,
-      name: room,
-      duration: getTime()
-    };
-
-    // Download the interview log first, ignoring any video.stopped events
-    // This is to work around a Chrome issue where the download name is not supported
-    // Create a blob from the session
-    var blob = new Blob(JSON.stringify(session).split(''));
-
-    // Convert the blob to an object URL
-    var objectURL = URL.createObjectURL(blob);
-
-    // Download the session JSON
-    downloadURL(objectURL, 'interview.'+(++part)+'.json');
-
-    // Download the recordings
-    downloadRecordings(function() {
+    // Upload the recordings
+    uploadSession(function() {
       // Reset log and start time
       // This will drop the video.stop events from the next log
       log = [];
@@ -880,12 +880,46 @@ function init() {
     storeKeyframe();
   }
 
-  function storeTrack(type, url, name) {
-    trackURLs.push({
-      type: type,
-      url: url,
-      name: name
-    });
+  function doUpload(tracks) {
+    // Create an instance for our blobs
+    var data = new FormData();
+
+    // Add each track to the data instance
+    var extension;
+    for (var i = 0; i < tracks.length; i++) {
+      var track = tracks[i];
+      if (track.type === 'audio') {
+        extension = 'wav';
+      }
+      else if (track.type === 'video') {
+        extension = 'webm';
+      }
+      else if (track.type === 'json') {
+        extension = 'json';
+      }
+
+      data.append(track.name, track.blob, track.name+'.'+extension);
+    }
+
+    $.ajax('/storeSession/'+encodeURIComponent(room), {
+      data: data,
+      cache: false,
+      contentType: false,
+      processData: false,
+      type: 'POST'
+    })
+    .then(
+      function(response) {
+        new Growl('Upload successful.');
+        console.log('Upload successful: ', response.message);
+      },
+      function(jqXHR) {
+        var response = getResponseFromXHR(jqXHR);
+
+        console.error('Upload failed: ', response.message);
+        new Growl('Upload failed: '+response.message, { time: 0 });
+      }
+    );
   }
 
   function setRunButtonStatus() {
@@ -1135,6 +1169,19 @@ function init() {
 
       storeKeyframe();
     }
+  }
+
+  function getResponseFromXHR(jqXHR) {
+    var response = {};
+    try {
+      response = JSON.parse(jqXHR.responseText);
+    }
+    catch(error) {
+      response.status = 'ERROR';
+      response.body = null;
+      response.message = 'The server returned an invalid response.';
+    }
+    return response;
   }
 }
 
