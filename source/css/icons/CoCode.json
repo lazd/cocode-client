@@ -762,11 +762,21 @@
 				},
 				{
 					"id": 187,
-					"order": 0
+					"order": 22,
+					"prevSize": 32,
+					"code": 58892,
+					"name": "download",
+					"tempChar": "",
+					"ligatures": ""
 				},
 				{
 					"id": 188,
-					"order": 0
+					"order": 21,
+					"prevSize": 32,
+					"code": 58899,
+					"name": "upload",
+					"tempChar": "",
+					"ligatures": ""
 				},
 				{
 					"id": 189,
@@ -778,11 +788,11 @@
 				},
 				{
 					"id": 191,
-					"order": 13,
+					"order": 0,
 					"prevSize": 32,
 					"code": 58892,
-					"name": "download",
-					"tempChar": "",
+					"name": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -803,7 +813,7 @@
 					"prevSize": 32,
 					"code": 58881,
 					"name": "link",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -832,7 +842,7 @@
 					"prevSize": 32,
 					"code": 58882,
 					"name": "bookmark",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -881,7 +891,7 @@
 					"prevSize": 32,
 					"code": 58883,
 					"name": "thumbs-up",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -890,7 +900,7 @@
 					"prevSize": 32,
 					"code": 58884,
 					"name": "thumbs-down",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1055,7 +1065,7 @@
 					"prevSize": 32,
 					"code": 58885,
 					"name": "close",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1076,7 +1086,7 @@
 					"prevSize": 32,
 					"code": 58886,
 					"name": "minus",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1085,7 +1095,7 @@
 					"prevSize": 32,
 					"code": 58887,
 					"name": "plus",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1127,7 +1137,7 @@
 					"prevSize": 32,
 					"code": 58894,
 					"name": "play",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1136,7 +1146,7 @@
 					"prevSize": 32,
 					"code": 58895,
 					"name": "pause",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1149,7 +1159,7 @@
 					"prevSize": 32,
 					"code": 58893,
 					"name": "backward",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1158,7 +1168,7 @@
 					"prevSize": 32,
 					"code": 58896,
 					"name": "forward",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1171,20 +1181,20 @@
 				},
 				{
 					"id": 273,
-					"order": 21,
+					"order": 19,
 					"prevSize": 32,
 					"code": 58897,
 					"name": "previous",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
 					"id": 274,
-					"order": 20,
+					"order": 18,
 					"prevSize": 32,
 					"code": 58898,
 					"name": "next",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1197,7 +1207,7 @@
 					"prevSize": 32,
 					"code": 58888,
 					"name": "speaker-active",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1214,7 +1224,7 @@
 					"prevSize": 32,
 					"code": 58889,
 					"name": "speaker-inactive",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1263,7 +1273,7 @@
 					"prevSize": 32,
 					"code": 58890,
 					"name": "arrow-right",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -1284,7 +1294,7 @@
 					"prevSize": 32,
 					"code": 58891,
 					"name": "arrow-left",
-					"tempChar": "",
+					"tempChar": "",
 					"ligatures": ""
 				},
 				{
@@ -2192,7 +2202,7 @@
 						"movie"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 19,
@@ -2207,7 +2217,7 @@
 						"play"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 20,
@@ -2222,7 +2232,7 @@
 						"movie"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 21,
@@ -3255,7 +3265,7 @@
 						"upload"
 					],
 					"grid": 16,
-					"matchesSearch": false
+					"matchesSearch": true
 				},
 				{
 					"id": 94,
@@ -3282,7 +3292,7 @@
 						"arrow"
 					],
 					"grid": 16,
-					"matchesSearch": false
+					"matchesSearch": true
 				},
 				{
 					"id": 96,
@@ -4041,7 +4051,7 @@
 						"health"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 148,
@@ -4609,7 +4619,7 @@
 						"load"
 					],
 					"grid": 16,
-					"matchesSearch": false
+					"matchesSearch": true
 				},
 				{
 					"id": 189,
@@ -4634,7 +4644,7 @@
 						"load"
 					],
 					"grid": 16,
-					"matchesSearch": false
+					"matchesSearch": true
 				},
 				{
 					"id": 191,
@@ -4659,7 +4669,7 @@
 						"load"
 					],
 					"grid": 16,
-					"matchesSearch": false
+					"matchesSearch": true
 				},
 				{
 					"id": 193,
@@ -5624,7 +5634,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 262,
@@ -5637,7 +5647,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 263,
@@ -5650,7 +5660,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 264,
@@ -5663,7 +5673,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 265,
@@ -5676,7 +5686,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 266,
@@ -5689,7 +5699,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 267,
@@ -5702,7 +5712,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 268,
@@ -5716,7 +5726,7 @@
 						"square"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 269,
@@ -5729,7 +5739,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 270,
@@ -5742,7 +5752,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 271,
@@ -5755,7 +5765,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 272,
@@ -5768,7 +5778,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 273,
@@ -5781,7 +5791,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 274,
@@ -5794,7 +5804,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 275,
@@ -5807,7 +5817,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 276,
@@ -5822,7 +5832,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 277,
@@ -5836,7 +5846,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 278,
@@ -5850,7 +5860,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 279,
@@ -5865,7 +5875,7 @@
 						"mute"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 280,
@@ -5880,7 +5890,7 @@
 						"mute"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 281,
@@ -5894,7 +5904,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 282,
@@ -5908,7 +5918,7 @@
 						"audio"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 283,
@@ -5927,7 +5937,7 @@
 						"arrows"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 284,
@@ -5946,7 +5956,7 @@
 						"arrows"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 285,
@@ -5965,7 +5975,7 @@
 						"arrows"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 286,
@@ -5978,7 +5988,7 @@
 						"random"
 					],
 					"grid": 16,
-					"matchesSearch": true
+					"matchesSearch": false
 				},
 				{
 					"id": 287,
@@ -6007,7 +6017,7 @@
 						"top"
 					],
 					"grid": 16,
-					"matchesSearch": false
+					"matchesSearch": true
 				},
 				{
 					"id": 289,
@@ -6123,7 +6133,7 @@
 						"top"
 					],
 					"grid": 16,
-					"matchesSearch": false
+					"matchesSearch": true
 				},
 				{
 					"id": 297,
@@ -6239,7 +6249,7 @@
 						"top"
 					],
 					"grid": 16,
-					"matchesSearch": false
+					"matchesSearch": true
 				},
 				{
 					"id": 305,

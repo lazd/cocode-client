@@ -1,10 +1,10 @@
 @font-face {
 	font-family: 'cocode';
-	src:url('fonts/cocode.eot?jc9e4q');
-	src:url('fonts/cocode.eot?#iefixjc9e4q') format('embedded-opentype'),
-		url('fonts/cocode.woff?jc9e4q') format('woff'),
-		url('fonts/cocode.ttf?jc9e4q') format('truetype'),
-		url('fonts/cocode.svg?jc9e4q#cocode') format('svg');
+	src:url('fonts/cocode.eot?-9zorux');
+	src:url('fonts/cocode.eot?#iefix-9zorux') format('embedded-opentype'),
+		url('fonts/cocode.woff?-9zorux') format('woff'),
+		url('fonts/cocode.ttf?-9zorux') format('truetype'),
+		url('fonts/cocode.svg?-9zorux#cocode') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -28,6 +28,9 @@
 }
 .icon-download:before {
 	content: "\e60c";
+}
+.icon-upload:before {
+	content: "\e613";
 }
 .icon-link:before {
 	content: "\e601";
