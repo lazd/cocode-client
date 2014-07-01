@@ -3,7 +3,7 @@
 
   top: var(--headerHeight);
   right: 0;
-  left: 0;
+  left: 50%;
   bottom: var(--headerHeight);
 
   z-index: 100;
