@@ -4,7 +4,7 @@
   
 .cc-Interview {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
 
   position: absolute;
   top: var(--headerHeight);
