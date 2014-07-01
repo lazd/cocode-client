@@ -2,11 +2,13 @@ module.exports = [
   {
     name: 'Introduction',
     video: true,
-    code: false
+    code: false,
+    rubric: 'experience'
   },
   {
     name: 'FizzBuzz',
     video: true,
+    rubric: 'technicalChallenge',
     test: function() {
       var expected = '12Fizz4BuzzFizz78FizzBuzz11Fizz1314FizzBuzz1617Fizz19BuzzFizz2223FizzBuzz26Fizz2829FizzBuzz3132Fizz34BuzzFizz3738FizzBuzz41Fizz4344FizzBuzz4647Fizz49BuzzFizz5253FizzBuzz56Fizz5859FizzBuzz6162Fizz64BuzzFizz6768FizzBuzz71Fizz7374FizzBuzz7677Fizz79BuzzFizz8283FizzBuzz86Fizz8889FizzBuzz9192Fizz94BuzzFizz9798FizzBuzz';
       fizzBuzz();
@@ -30,6 +32,7 @@ function fizzBuzz() {\n\
   {
     name: 'Given a sorted array of numbers, write a search function',
     video: true,
+    rubric: 'technicalChallenge',
     test: function() {
       console.assert(search(arr, 14), '14 is in the array');
       console.assert(search(arr, 10), '10 is in the array');
@@ -55,6 +58,7 @@ function search(arr, val) {\n\
   {
     name: 'Implement JSON.stringify()',
     video: true,
+    rubric: 'technicalChallenge',
     test: function() {
       var obj = {
         name: 'Value',
@@ -86,6 +90,7 @@ function stringify(obj) {\n\
   {
     name: 'Reverse an array in place',
     video: true,
+    rubric: 'technicalChallenge',
     test: function() {
       var actual = reverse([15, 10, 5, 1, 2, 3]);
       var expected = [3, 2, 1, 5, 10, 15];

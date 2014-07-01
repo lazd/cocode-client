@@ -5,6 +5,13 @@ var Editor = require('./editor');
 var questions = require('./questions');
 var Growl = require('./growl');
 
+var templates = {
+  rubric: {
+    technicalChallenge: require('../templates/Rubric_Technical.hbs'),
+    experience: require('../templates/Rubric_Experience.hbs')
+  }
+};
+
 var videoRecorderOptions = {
    type: 'video',
    video: {
@@ -70,7 +77,8 @@ function init() {
     downloadButton: '#cc-DownloadButton',
     footer: '#cc-Footer',
     footerButtons: '.js-footerButtons',
-    downloadButton: '.js-downloadSession'
+    downloadButton: '.js-downloadSession',
+    ratingPanel: '#cc-RatingPanel'
   };
 
   // Grab the room and user from the URL
@@ -1132,6 +1140,13 @@ function init() {
     if (questions[questionIndex]) {
       currentQuestionIndex = questionIndex;
       currentQuestion = questions[questionIndex];
+
+      if (isInterviewer && currentQuestion.rubric) {
+        els.$ratingPanel.show().html(templates.rubric[currentQuestion.rubric]());
+      }
+      else {
+        els.$ratingPanel.hide();
+      }
 
       if (currentQuestion.code) {
         setTitle('Question '+(questionIndex+1), currentQuestion.name);

@@ -23,6 +23,7 @@
 @import 'Video.css';
 @import 'VideoPanel.css';
 @import 'TimelineContainer.css';
+@import 'RatingPanel.css';
 
 /* Allow utilities to override classes */
 @import 'utilities.css';
