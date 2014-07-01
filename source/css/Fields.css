@@ -1,24 +1,50 @@
 .cc-Fields {
-	display: table;
-	margin: 8px;
+  display: table;
+  width: 100%;
 }
 
 .cc-Fields label {
-	display: table-row;
+  display: table-row;
 }
 
 .cc-Fields label dt,
 .cc-Fields label dd {
-	display: table-cell;
+  display: table-cell;
 }
 
 .cc-Fields label dt {
-	padding: 0 8px;
-	text-align: right;
-	vertical-align: middle;
+  padding: 8px;
+  text-align: right;
+  vertical-align: middle;
 }
 
 .cc-Fields label dd {
-	padding: 8px 0;
-	text-align: left;
+  padding: 8px;
+  text-align: left;
+}
+
+%cc-FieldHeading {
+  color: white;
+  margin: 0;
+  padding: 4px 8px;
+}
+
+.cc-FieldHeading {
+  extend: %cc-FieldHeading;
+  background: var(--coTrainBlue-light);
+}
+
+.cc-FieldSet {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cc-FieldSet-legend {
+  extend: %cc-FieldHeading;
+
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  background: var(--coTrainBlue-dark);
 }
